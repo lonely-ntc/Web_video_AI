@@ -1,0 +1,25 @@
+html {
+  min-width: 320px;
+  background: #f6f7fb;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body, input, button { font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+button:focus-visible, input:focus-visible {
+  outline: 3px solid rgba(111, 90, 242, .25);
+  outline-offset: 2px;
+}
+
+::selection { color: #342872; background: #ddd8ff; }
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 8px; background: #d1cfdd; background-clip: padding-box; }

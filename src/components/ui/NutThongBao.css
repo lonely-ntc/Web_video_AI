@@ -1,0 +1,81 @@
+/* Thiet ke nut thong bao. */
+.notification-trigger {
+  width: 46px;
+  height: 46px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  transition: background .3s ease;
+}
+
+.notification-trigger:hover { background: rgba(81, 91, 128, .065); }
+
+.bell-container {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 15%;
+}
+
+.css-bell {
+  width: 15px;
+  height: 17px;
+  position: relative;
+  top: -3px;
+  display: block;
+  border: 2.17px solid #1f387e;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+}
+
+.css-bell::before,
+.css-bell::after {
+  content: '';
+  height: 2.17px;
+  position: absolute;
+  left: 50%;
+  display: block;
+  background: #1f387e;
+  transform: translateX(-50%);
+}
+
+.css-bell::before { width: 20px; top: 100%; }
+.css-bell::after { width: 7px; top: calc(100% + 4px); }
+
+.notification-badge {
+  min-width: 15px;
+  height: 15px;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  background: #ef344d;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.notification-trigger:hover > .bell-container {
+  animation: notification-bell-ring .65s ease-out both;
+}
+
+@keyframes notification-bell-ring {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(15deg) scale(1); }
+  40% { transform: rotate(-15deg) scale(1.1); }
+  60% { transform: rotate(10deg) scale(1.1); }
+  80% { transform: rotate(-10deg) scale(1); }
+}

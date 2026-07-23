@@ -1,0 +1,86 @@
+.nav-item {
+  width: 100%;
+  min-height: 43px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #56617d;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.nav-item:hover {
+  border-color: transparent;
+  color: #5d47dd;
+  background: #f4f2ff;
+  transform: translateX(2px);
+}
+
+.nav-item:active { transform: translateX(2px) scale(.985); }
+
+.nav-item.active {
+  border-color: transparent;
+  color: #5b43e3;
+  background: linear-gradient(100deg, #ebe8ff 0%, #efedff 100%);
+  box-shadow: none;
+}
+
+.nav-item.active:hover { transform: none; }
+
+.nav-item-icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  color: #707994;
+  transition: color .2s ease, transform .2s ease;
+}
+
+.nav-item:hover .nav-item-icon { color: #6650e7; transform: scale(1.04); }
+.nav-item.active .nav-item-icon { color: #624bea; }
+
+.nav-item-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-count {
+  min-width: 21px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 7px;
+  color: #634be4;
+  background: #f0edff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.nav-item.active .nav-count { color: #5c45dc; background: rgba(255, 255, 255, .72); }
+
+html[data-theme='dark'] .nav-item { color: #aab5ca; }
+html[data-theme='dark'] .nav-item-icon { color: #8592aa; }
+html[data-theme='dark'] .nav-item:hover { border-color: transparent; color: #ded8ff; background: #202a3d; }
+html[data-theme='dark'] .nav-item:hover .nav-item-icon { color: #b8adff; }
+html[data-theme='dark'] .nav-item.active { border-color: transparent; color: #ddd7ff; background: linear-gradient(100deg, #312a5b 0%, #29264b 100%); box-shadow: none; }
+html[data-theme='dark'] .nav-item.active .nav-item-icon { color: #b8adff; }
+html[data-theme='dark'] .nav-count { color: #bdb4ff; background: #292442; }
+html[data-theme='dark'] .nav-item.active .nav-count { color: #171326; background: #b9afff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .nav-item-icon { transition: none; }
+}
