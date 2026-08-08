@@ -1,12 +1,14 @@
 import './NutDieuHuong.css';
 
-function NutDieuHuong({ label, icon: Icon, active, count, onClick }) {
+function NutDieuHuong({ label, icon: Icon, active, count, collapsed = false, onClick }) {
   return (
     <button
       className={`nav-item ${active ? 'active' : ''}`}
       type="button"
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
+      aria-label={collapsed ? label : undefined}
+      title={collapsed ? label : undefined}
     >
       <span className="nav-item-icon" aria-hidden="true">
         <Icon size={19} strokeWidth={active ? 2.15 : 1.85} />

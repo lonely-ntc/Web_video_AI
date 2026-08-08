@@ -12,9 +12,11 @@ import logo from '../assets/images/logo.png';
 import LogoThuongHieu from '../components/ui/LogoThuongHieu';
 import ONhapXacNhanMatKhau from '../components/ui/ONhapXacNhanMatKhau';
 import ONhapMatKhau from '../components/ui/ONhapMatKhau';
+import { useNgonNgu } from '../contexts/NgonNguContext';
 import useDangNhapDangKy from '../flows/useDangNhapDangKy';
 
 function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackToDashboard }) {
+  const { t } = useNgonNgu();
   const {
     confirmation,
     duplicateEmail,
@@ -32,19 +34,19 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
   if (confirmation) {
     const confirmationCopy = {
       signup: {
-        title: 'Kiểm tra hộp thư của bạn',
-        description: `Chúng tôi đã gửi liên kết xác nhận đến ${form.email}. Mở email để kích hoạt tài khoản.`,
-        action: 'Quay lại đăng nhập',
+        title: t('auth.signupConfirmationTitle'),
+        description: t('auth.signupConfirmationDescription', { email: form.email }),
+        action: t('auth.backToLogin'),
       },
       reset: {
-        title: 'Email khôi phục đã được gửi',
-        description: `Hãy mở liên kết được gửi đến ${form.email} để đặt lại mật khẩu.`,
-        action: 'Quay lại đăng nhập',
+        title: t('auth.resetConfirmationTitle'),
+        description: t('auth.resetConfirmationDescription', { email: form.email }),
+        action: t('auth.backToLogin'),
       },
       'password-updated': {
-        title: 'Mật khẩu đã được cập nhật',
-        description: 'Bạn có thể tiếp tục sử dụng AI Video Studio với mật khẩu mới.',
-        action: 'Tiếp tục vào Dashboard',
+        title: t('auth.passwordUpdatedTitle'),
+        description: t('auth.passwordUpdatedDescription'),
+        action: t('auth.continueToDashboard'),
       },
     }[confirmation];
 
@@ -54,7 +56,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
         <section className="auth-form-panel">
           <div className="auth-card auth-confirmation-card">
             <div className="auth-success-icon"><CheckCircle2 size={30} /></div>
-            <span className="auth-form-eyebrow">Hoàn tất</span>
+            <span className="auth-form-eyebrow">{t('auth.complete')}</span>
             <h2>{confirmationCopy.title}</h2>
             <p>{confirmationCopy.description}</p>
             <button
@@ -89,36 +91,48 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
 
           {(isForgot || isUpdatePassword) && !isUpdatePassword && (
             <button className="auth-back" type="button" onClick={() => switchMode('login')}>
-              <ArrowLeft size={16} /> Quay lại đăng nhập
+              <ArrowLeft size={16} /> {t('auth.backToLogin')}
             </button>
           )}
 
           {!isForgot && !isUpdatePassword && onBackToDashboard && (
             <button className="auth-back" type="button" onClick={onBackToDashboard}>
-              <ArrowLeft size={16} /> Quay lại Dashboard
+              <ArrowLeft size={16} /> {t('auth.backToDashboard')}
             </button>
           )}
 
           <div className="auth-form-heading">
             <span className="auth-form-eyebrow">
-              {isRegister ? 'Bắt đầu miễn phí' : isForgot ? 'Khôi phục tài khoản' : isUpdatePassword ? 'Bảo mật tài khoản' : 'Chào mừng trở lại'}
+              {isRegister
+                ? t('auth.startFree')
+                : isForgot
+                  ? t('auth.recoverAccount')
+                  : isUpdatePassword
+                    ? t('auth.accountSecurity')
+                    : t('auth.welcomeBack')}
             </span>
             <h2>
-              {isRegister ? 'Tạo tài khoản mới' : isForgot ? 'Quên mật khẩu?' : isUpdatePassword ? 'Đặt mật khẩu mới' : 'Đăng nhập tài khoản'}
+              {isRegister
+                ? t('auth.createAccountTitle')
+                : isForgot
+                  ? t('auth.forgotPasswordTitle')
+                  : isUpdatePassword
+                    ? t('auth.newPasswordTitle')
+                    : t('auth.loginTitle')}
             </h2>
             <p>
               {isRegister
-                ? 'Tạo tài khoản để bắt đầu xây dựng video AI của riêng bạn.'
+                ? t('auth.registerDescription')
                 : isForgot
-                  ? 'Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết khôi phục.'
+                  ? t('auth.forgotDescription')
                   : isUpdatePassword
-                    ? 'Chọn mật khẩu mới có ít nhất 8 ký tự cho tài khoản của bạn.'
-                    : 'Nhập thông tin để tiếp tục vào không gian sáng tạo.'}
+                    ? t('auth.updatePasswordDescription')
+                    : t('auth.loginDescription')}
             </p>
           </div>
 
           {!isForgot && !isUpdatePassword && (
-            <div className="auth-tabs" role="tablist" aria-label="Chọn hình thức xác thực">
+            <div className="auth-tabs" role="tablist" aria-label={t('auth.authMethod')}>
               <button
                 type="button"
                 role="tab"
@@ -126,7 +140,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
                 className={mode === 'login' ? 'active' : ''}
                 onClick={() => switchMode('login')}
               >
-                Đăng nhập
+                {t('auth.login')}
               </button>
               <button
                 type="button"
@@ -135,7 +149,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
                 className={mode === 'register' ? 'active' : ''}
                 onClick={() => switchMode('register')}
               >
-                Đăng ký
+                {t('auth.register')}
               </button>
             </div>
           )}
@@ -144,7 +158,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
             {isRegister && (
               <ONhapXacNhanMatKhau
                 id="fullName"
-                label="Họ và tên"
+                label={t('auth.fullName')}
                 value={form.fullName}
                 onChange={updateField('fullName')}
                 autoComplete="name"
@@ -165,7 +179,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
             {!isForgot && (
               <ONhapMatKhau
                 id="password"
-                label={isUpdatePassword ? 'Mật khẩu mới' : 'Mật khẩu'}
+                label={isUpdatePassword ? t('auth.newPassword') : t('auth.password')}
                 value={form.password}
                 onChange={updateField('password')}
                 autoComplete={isRegister ? 'new-password' : isUpdatePassword ? 'new-password' : 'current-password'}
@@ -177,7 +191,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
             {(isRegister || isUpdatePassword) && (
               <ONhapMatKhau
                 id="confirmPassword"
-                label="Nhập lại mật khẩu"
+                label={t('auth.confirmPassword')}
                 value={form.confirmPassword}
                 onChange={updateField('confirmPassword')}
                 autoComplete="new-password"
@@ -188,8 +202,8 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
 
             {mode === 'login' && (
               <div className="auth-form-options">
-                <span><ShieldCheck size={15} /> Phiên đăng nhập được bảo mật</span>
-                <button type="button" onClick={() => switchMode('forgot')}>Quên mật khẩu?</button>
+                <span><ShieldCheck size={15} /> {t('auth.secureSession')}</span>
+                <button type="button" onClick={() => switchMode('forgot')}>{t('auth.forgotPassword')}</button>
               </div>
             )}
 
@@ -201,7 +215,7 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
                   onChange={updateField('acceptedTerms')}
                 />
                 <span className="auth-checkbox"><Check size={13} /></span>
-                <span>Tôi đồng ý với Điều khoản sử dụng và Chính sách bảo mật.</span>
+                <span>{t('auth.acceptTerms')}</span>
               </label>
             )}
 
@@ -209,12 +223,12 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
               <div className="auth-duplicate-email" role="alert">
                 <CircleAlert size={20} />
                 <div>
-                  <strong>Email đã được sử dụng</strong>
-                  <p>Tài khoản với email <b>{form.email.trim()}</b> đã tồn tại. Bạn có thể đăng nhập hoặc khôi phục mật khẩu.</p>
+                  <strong>{t('auth.duplicateTitle')}</strong>
+                  <p>{t('auth.duplicateDescription', { email: form.email.trim() })}</p>
                 </div>
                 <div className="auth-duplicate-actions">
-                  <button type="button" onClick={() => switchMode('login')}>Chuyển sang đăng nhập</button>
-                  <button type="button" onClick={() => switchMode('forgot')}>Quên mật khẩu</button>
+                  <button type="button" onClick={() => switchMode('login')}>{t('auth.switchToLogin')}</button>
+                  <button type="button" onClick={() => switchMode('forgot')}>{t('auth.forgotPassword')}</button>
                 </div>
               </div>
             )}
@@ -223,10 +237,16 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
 
             <button className="auth-submit" type="submit" disabled={loading}>
               {loading ? (
-                <><LoaderCircle className="auth-spinner" size={18} /> Đang xử lý...</>
+                <><LoaderCircle className="auth-spinner" size={18} /> {t('auth.loading')}</>
               ) : (
                 <>
-                  {isRegister ? 'Tạo tài khoản' : isForgot ? 'Gửi liên kết khôi phục' : isUpdatePassword ? 'Cập nhật mật khẩu' : 'Đăng nhập'}
+                  {isRegister
+                    ? t('auth.createAccount')
+                    : isForgot
+                      ? t('auth.sendRecovery')
+                      : isUpdatePassword
+                        ? t('auth.updatePassword')
+                        : t('auth.login')}
                   <ArrowRight size={17} />
                 </>
               )}
@@ -235,14 +255,14 @@ function TrangDangNhapDangKy({ initialMode = 'login', onPasswordUpdated, onBackT
 
           {!isForgot && !isUpdatePassword && (
             <p className="auth-switch-copy">
-              {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
+              {isRegister ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
               <button type="button" onClick={() => switchMode(isRegister ? 'login' : 'register')}>
-                {isRegister ? 'Đăng nhập ngay' : 'Đăng ký miễn phí'}
+                {isRegister ? t('auth.loginNow') : t('auth.registerFree')}
               </button>
             </p>
           )}
 
-          <p className="auth-security-note"><LockKeyhole size={13} /> Thông tin đăng nhập được bảo vệ bởi Supabase Auth.</p>
+          <p className="auth-security-note"><LockKeyhole size={13} /> {t('auth.securityNote')}</p>
         </div>
       </section>
     </main>

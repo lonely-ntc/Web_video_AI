@@ -1,14 +1,20 @@
+import { useNgonNgu } from '../../contexts/NgonNguContext';
 import './NutThongBao.css';
 
 // Nut thong bao co hieu ung rung chuong.
 function NutThongBao({ count = 0, isOpen, onClick }) {
+  const { t } = useNgonNgu();
+  const nhanThongBao = count
+    ? `${t('header.notifications')}, ${t('header.newNotificationCount', { count })}`
+    : t('header.notifications');
+
   return (
     <button
       className="notification-trigger"
       type="button"
       onClick={onClick}
       aria-expanded={isOpen}
-      aria-label={`Thông báo${count ? `, ${count} thông báo mới` : ''}`}
+      aria-label={nhanThongBao}
     >
       <span className="bell-container" aria-hidden="true">
         <span className="css-bell" />

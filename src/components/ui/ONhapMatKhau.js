@@ -1,4 +1,5 @@
 import { Eye, EyeOff } from 'lucide-react';
+import { useNgonNgu } from '../../contexts/NgonNguContext';
 import ONhapXacNhanMatKhau from './ONhapXacNhanMatKhau';
 import './ONhapMatKhau.css';
 
@@ -12,6 +13,8 @@ function ONhapMatKhau({
   showPassword,
   onToggle,
 }) {
+  const { t } = useNgonNgu();
+
   return (
     <ONhapXacNhanMatKhau
       id={id}
@@ -22,7 +25,11 @@ function ONhapMatKhau({
       autoComplete={autoComplete}
       minLength="8"
       endAdornment={
-        <button type="button" onClick={onToggle} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+        >
           {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
         </button>
       }

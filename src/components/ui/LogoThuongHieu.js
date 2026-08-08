@@ -1,14 +1,16 @@
 import { FileText, ShieldCheck, Sparkles, Video } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
-
-const authBenefits = [
-  { icon: Video, text: 'Tạo video AI chuyên nghiệp trong vài phút' },
-  { icon: FileText, text: 'Biến tài liệu thành kịch bản tự động' },
-  { icon: ShieldCheck, text: 'Dữ liệu và dự án được lưu trữ an toàn' },
-];
+import { useNgonNgu } from '../../contexts/NgonNguContext';
 
 // Thanh phan UI gioi thieu thuong hieu tren trang xac thuc.
 function LogoThuongHieu() {
+  const { t } = useNgonNgu();
+  const authBenefits = [
+    { icon: Video, text: t('auth.benefits.video') },
+    { icon: FileText, text: t('auth.benefits.document') },
+    { icon: ShieldCheck, text: t('auth.benefits.secure') },
+  ];
+
   return (
     <section className="auth-brand-panel">
       <div className="auth-brand-glow glow-one" />
@@ -20,9 +22,9 @@ function LogoThuongHieu() {
         </div>
 
         <div className="auth-pitch">
-          <span className="auth-kicker"><Sparkles size={15} /> Sáng tạo không giới hạn</span>
-          <h1>Biến ý tưởng của bạn thành video ấn tượng.</h1>
-          <p>Một không gian duy nhất để viết kịch bản, tạo Avatar AI, lồng tiếng và xuất bản video.</p>
+          <span className="auth-kicker"><Sparkles size={15} /> {t('auth.unlimitedCreativity')}</span>
+          <h1>{t('auth.pitchTitle')}</h1>
+          <p>{t('auth.pitchDescription')}</p>
 
           <div className="auth-benefits">
             {authBenefits.map(({ icon: Icon, text }) => (
@@ -36,8 +38,8 @@ function LogoThuongHieu() {
 
         <div className="auth-quote">
           <div className="auth-quote-stars">★★★★★</div>
-          <p>“AI Video Studio giúp đội ngũ của tôi rút ngắn hàng giờ sản xuất xuống chỉ còn vài phút.”</p>
-          <span>Minh Anh · Creative Lead</span>
+          <p>{t('auth.quote')}</p>
+          <span>{t('auth.quoteAuthor')}</span>
         </div>
       </div>
     </section>

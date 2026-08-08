@@ -1,5 +1,6 @@
 // Xu ly toan bo luong dang nhap, dang ky va khoi phuc tai khoan.
 import { useEffect, useState } from 'react';
+import { useNgonNgu } from '../contexts/NgonNguContext';
 import { supabase } from '../database/supabase';
 
 const bieuMauBanDau = {
@@ -28,32 +29,33 @@ function laPhanHoiEmailDaTonTai(data) {
   return Array.isArray(identities) && identities.length === 0;
 }
 
-function dichLoiXacThuc(error) {
+function dichLoiXacThuc(error, t) {
   const message = error?.message?.toLowerCase() || '';
 
   if (message.includes('invalid login credentials')) {
-    return 'Email hoặc mật khẩu chưa chính xác.';
+    return t('auth.errors.invalidCredentials');
   }
   if (message.includes('email not confirmed')) {
-    return 'Bạn cần xác nhận email trước khi đăng nhập.';
+    return t('auth.errors.emailNotConfirmed');
   }
   if (message.includes('user already registered')) {
-    return 'Email này đã được đăng ký. Hãy chuyển sang đăng nhập.';
+    return t('auth.errors.alreadyRegistered');
   }
   if (message.includes('password should be')) {
-    return 'Mật khẩu chưa đáp ứng yêu cầu bảo mật.';
+    return t('auth.errors.weakPassword');
   }
   if (message.includes('rate limit')) {
-    return 'Bạn đã thao tác quá nhanh. Vui lòng thử lại sau ít phút.';
+    return t('auth.errors.rateLimit');
   }
   if (message.includes('failed to fetch')) {
-    return 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.';
+    return t('auth.errors.network');
   }
 
-  return error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+  return error?.message || t('auth.errors.generic');
 }
 
 function useDangNhapDangKy(initialMode = 'login') {
+  const { t } = useNgonNgu();
   const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState(bieuMauBanDau);
   const [showPassword, setShowPassword] = useState(false);
@@ -83,10 +85,10 @@ function useDangNhapDangKy(initialMode = 'login') {
 
   const validatePasswords = () => {
     if (form.password.length < 8) {
-      throw new Error('Mật khẩu cần có ít nhất 8 ký tự.');
+      throw new Error(t('auth.errors.passwordLength'));
     }
     if (form.password !== form.confirmPassword) {
-      throw new Error('Mật khẩu nhập lại chưa trùng khớp.');
+      throw new Error(t('auth.errors.passwordMismatch'));
     }
   };
 
@@ -109,10 +111,10 @@ function useDangNhapDangKy(initialMode = 'login') {
         validatePasswords();
         const fullName = form.fullName.trim();
         if (fullName.length < 2) {
-          throw new Error('Vui lòng nhập họ và tên của bạn.');
+          throw new Error(t('auth.errors.fullNameRequired'));
         }
         if (!form.acceptedTerms) {
-          throw new Error('Bạn cần đồng ý với điều khoản sử dụng.');
+          throw new Error(t('auth.errors.termsRequired'));
         }
 
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -165,7 +167,7 @@ function useDangNhapDangKy(initialMode = 'login') {
       if (mode === 'register' && laLoiEmailBiTrung(submitError)) {
         setDuplicateEmail(true);
       } else {
-        setError(dichLoiXacThuc(submitError));
+        setError(dichLoiXacThuc(submitError, t));
       }
     } finally {
       setLoading(false);

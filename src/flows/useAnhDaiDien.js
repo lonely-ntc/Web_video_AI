@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNgonNgu } from '../contexts/NgonNguContext';
 import { taiAnhDaiDien } from '../database/anhDaiDien';
 import { capNhatAnhDaiDien } from '../database/hoSoNguoiDung';
 import { supabase } from '../database/supabase';
@@ -6,19 +7,20 @@ import { supabase } from '../database/supabase';
 const LOAI_ANH_CHO_PHEP = ['image/jpeg', 'image/png', 'image/webp'];
 const KICH_THUOC_TOI_DA = 5 * 1024 * 1024;
 
-function dichLoiAnhDaiDien(error) {
+function dichLoiAnhDaiDien(error, t) {
   const message = error?.message?.toLowerCase() || '';
 
   if (message.includes('bucket not found') || error?.statusCode === '404') {
-    return 'Chưa có kho ảnh avatars. Hãy chạy lại file SQL cấu hình Supabase.';
+    return t('profile.avatar.bucketMissing');
   }
   if (message.includes('row-level security') || error?.statusCode === '403') {
-    return 'Tài khoản chưa có quyền cập nhật ảnh đại diện. Hãy kiểm tra chính sách Storage.';
+    return t('profile.avatar.permissionDenied');
   }
-  return error?.message || 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.';
+  return error?.message || t('profile.avatar.updateFailed');
 }
 
 function useAnhDaiDien(user) {
+  const { t } = useNgonNgu();
   const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
   const [dangTaiAnh, setDangTaiAnh] = useState(false);
   const [thongBaoAnh, setThongBaoAnh] = useState('');
@@ -33,15 +35,15 @@ function useAnhDaiDien(user) {
     setLoiAnh('');
 
     if (!user?.id) {
-      setLoiAnh('Bạn cần đăng nhập để thay đổi ảnh đại diện.');
+      setLoiAnh(t('profile.avatar.loginRequired'));
       return;
     }
     if (!LOAI_ANH_CHO_PHEP.includes(file?.type)) {
-      setLoiAnh('Chỉ chấp nhận ảnh JPG, PNG hoặc WebP.');
+      setLoiAnh(t('profile.avatar.invalidType'));
       return;
     }
     if (file.size > KICH_THUOC_TOI_DA) {
-      setLoiAnh('Ảnh đại diện không được lớn hơn 5 MB.');
+      setLoiAnh(t('profile.avatar.tooLarge'));
       return;
     }
 
@@ -64,9 +66,9 @@ function useAnhDaiDien(user) {
       if (metadataError) throw metadataError;
 
       setAvatarUrl(anhDaTai.url);
-      setThongBaoAnh('Ảnh đại diện đã được cập nhật thành công.');
+      setThongBaoAnh(t('profile.avatar.updated'));
     } catch (updateError) {
-      setLoiAnh(dichLoiAnhDaiDien(updateError));
+      setLoiAnh(dichLoiAnhDaiDien(updateError, t));
     } finally {
       setDangTaiAnh(false);
     }

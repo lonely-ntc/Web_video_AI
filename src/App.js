@@ -3,6 +3,7 @@ import TrangDangNhapDangKy from './pages/TrangDangNhapDangKy';
 import TrangDashboard from './pages/TrangDashboard';
 import { supabase } from './database/supabase';
 import useCaiDat from './flows/useCaiDat';
+import { NgonNguProvider } from './contexts/NgonNguContext';
 import './styles/dang-nhap-dang-ky.css';
 
 function App() {
@@ -47,28 +48,34 @@ function App() {
     if (error) throw error;
   };
 
+  let noiDung;
+
   if (isPasswordRecovery) {
-    return (
+    noiDung = (
       <TrangDangNhapDangKy
         initialMode="update-password"
         onPasswordUpdated={() => setIsPasswordRecovery(false)}
       />
     );
-  }
-
-  if (showAuth && !session) {
-    return <TrangDangNhapDangKy onBackToDashboard={() => setShowAuth(false)} />;
+  } else if (showAuth && !session) {
+    noiDung = <TrangDangNhapDangKy onBackToDashboard={() => setShowAuth(false)} />;
+  } else {
+    noiDung = (
+      <TrangDashboard
+        user={session?.user || null}
+        onLogin={() => setShowAuth(true)}
+        onSignOut={handleSignOut}
+        caiDat={caiDat}
+        onAppearanceChange={capNhatGiaoDien}
+        onNotificationToggle={batTatThongBao}
+      />
+    );
   }
 
   return (
-    <TrangDashboard
-      user={session?.user || null}
-      onLogin={() => setShowAuth(true)}
-      onSignOut={handleSignOut}
-      caiDat={caiDat}
-      onAppearanceChange={capNhatGiaoDien}
-      onNotificationToggle={batTatThongBao}
-    />
+    <NgonNguProvider language={caiDat.language}>
+      {noiDung}
+    </NgonNguProvider>
   );
 }
 

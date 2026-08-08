@@ -1,0 +1,146 @@
+.theme-toggle {
+  width: 68px;
+  height: 43px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle-input {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-toggle-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  border-radius: inherit;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.theme-toggle:hover .theme-toggle-art {
+  filter: brightness(1.035);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:active .theme-toggle-art {
+  transform: translateY(0) scale(.96);
+}
+
+.theme-toggle-input:focus-visible + .theme-toggle-art {
+  outline: 3px solid rgba(111, 90, 242, .3);
+  outline-offset: 2px;
+}
+
+.theme-toggle-sky,
+.theme-toggle-button,
+.theme-toggle-sun,
+.theme-toggle-moon,
+.theme-toggle-cloud,
+.theme-toggle-stars {
+  transition: all .35s cubic-bezier(.4, 0, .2, 1);
+}
+
+.theme-toggle-sky {
+  fill: #83cbd8;
+  filter: drop-shadow(0 3px 4px rgba(42, 91, 118, .2));
+}
+
+.theme-toggle-sun {
+  opacity: 1;
+}
+
+.theme-toggle-sun-outer {
+  fill: #f8e664;
+  filter: drop-shadow(0 2px 3px rgba(133, 112, 22, .3));
+}
+
+.theme-toggle-sun-glow {
+  fill: rgba(246, 254, 247, .3);
+}
+
+.theme-toggle-sun-inner {
+  fill: #fcf4b9;
+}
+
+.theme-toggle-moon {
+  opacity: 0;
+}
+
+.theme-toggle-moon-body {
+  fill: #cce6ee;
+  filter: drop-shadow(0 2px 3px rgba(10, 28, 51, .35));
+}
+
+.theme-toggle-moon-patches {
+  fill: #a6cad0;
+}
+
+.theme-toggle-cloud {
+  fill: #fff;
+  opacity: 1;
+  filter: drop-shadow(0 1px 1px rgba(42, 91, 118, .15));
+}
+
+.theme-toggle-stars {
+  fill: #def8ff;
+  opacity: 0;
+  transform-origin: 14px 18px;
+  transform: scale(.7) rotate(-8deg);
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-sky {
+  fill: #2b4360;
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-button {
+  transform: translate(28px, 2.333px);
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-sun {
+  opacity: 0;
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-moon {
+  opacity: 1;
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-cloud {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+.theme-toggle-input:checked + .theme-toggle-art .theme-toggle-stars {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+@media (max-width: 680px) {
+  .theme-toggle {
+    width: 56px;
+    height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-art,
+  .theme-toggle-sky,
+  .theme-toggle-button,
+  .theme-toggle-sun,
+  .theme-toggle-moon,
+  .theme-toggle-cloud,
+  .theme-toggle-stars {
+    transition: none;
+  }
+}

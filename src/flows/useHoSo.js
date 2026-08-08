@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNgonNgu } from '../contexts/NgonNguContext';
 import { supabase } from '../database/supabase';
 import {
   layHoSoNguoiDung,
@@ -27,14 +28,15 @@ function laLoiBangHoSoChuaSanSang(error) {
   return ['42P01', 'PGRST205', '42501'].includes(error?.code);
 }
 
-function dichLoiHoSo(error) {
+function dichLoiHoSo(error, t) {
   if (laLoiBangHoSoChuaSanSang(error)) {
-    return 'Chưa thể ghi vào bảng public.profiles. Hãy chạy file SQL tạo bảng trên Supabase rồi thử lại.';
+    return t('profile.errors.tableUnavailable');
   }
-  return error?.message || 'Không thể tải thông tin hồ sơ. Vui lòng thử lại.';
+  return error?.message || t('profile.errors.loadFailed');
 }
 
 function useHoSo(user) {
+  const { t } = useNgonNgu();
   const userBanDauRef = useRef(user);
   const [hoSo, setHoSo] = useState(() => taoDuLieuHoSo(user));
   const [dangTai, setDangTai] = useState(Boolean(user?.id));
@@ -65,7 +67,7 @@ function useHoSo(user) {
         }
       } catch (loadError) {
         if (conHoatDong) {
-          setLoi(dichLoiHoSo(loadError));
+          setLoi(dichLoiHoSo(loadError, t));
         }
       } finally {
         if (conHoatDong) setDangTai(false);
@@ -77,7 +79,7 @@ function useHoSo(user) {
     return () => {
       conHoatDong = false;
     };
-  }, [userId]);
+  }, [t, userId]);
 
   const capNhatTruong = (tenTruong) => (event) => {
     setHoSo((hienTai) => ({ ...hienTai, [tenTruong]: event.target.value }));
@@ -91,11 +93,11 @@ function useHoSo(user) {
     setLoi('');
 
     if (hoSo.fullName.trim().length < 2) {
-      setLoi('Họ và tên cần có ít nhất 2 ký tự.');
+      setLoi(t('profile.errors.fullNameTooShort'));
       return;
     }
     if (!user?.id) {
-      setLoi('Bạn cần đăng nhập để lưu thông tin hồ sơ.');
+      setLoi(t('profile.errors.loginRequired'));
       return;
     }
 
@@ -119,9 +121,9 @@ function useHoSo(user) {
 
       if (metadataError) throw metadataError;
 
-      setThongBao('Thông tin hồ sơ đã được lưu vào bảng public.profiles.');
+      setThongBao(t('profile.saved'));
     } catch (updateError) {
-      setLoi(dichLoiHoSo(updateError));
+      setLoi(dichLoiHoSo(updateError, t));
     } finally {
       setDangLuu(false);
     }

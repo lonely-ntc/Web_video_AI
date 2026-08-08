@@ -1,0 +1,87 @@
+.sidebar-toggle-shell {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.sidebar-toggle-input {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-toggle-control {
+  width: 38px;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color .25s ease, border-color .25s ease, transform .3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-toggle-control:hover {
+  color: var(--primary-dark);
+  background: #f3f1ff;
+}
+
+.sidebar-toggle-bar {
+  width: 21px;
+  height: 2.5px;
+  display: block;
+  border-radius: 5px;
+  color: #696e81;
+  background: currentColor;
+  transition: transform .3s ease, width .3s ease, opacity .2s ease, background-color .2s ease;
+}
+
+.sidebar-toggle-input:focus-visible + .sidebar-toggle-control {
+  border-color: rgba(111, 90, 242, .65);
+  box-shadow: 0 0 0 3px rgba(111, 90, 242, .12);
+}
+
+.sidebar-toggle-input:checked + .sidebar-toggle-control {
+  transform: rotate(-90deg);
+}
+
+.sidebar-toggle-input:checked + .sidebar-toggle-control .bar-two {
+  z-index: 2;
+  transform: translateY(7.5px) rotate(60deg);
+  transform-origin: right;
+}
+
+.sidebar-toggle-input:checked + .sidebar-toggle-control .bar-one {
+  z-index: 1;
+  transform: translateY(15px) rotate(-60deg);
+  transform-origin: left;
+}
+
+.sidebar-toggle-input:checked + .sidebar-toggle-control .bar-three {
+  width: 18px;
+}
+
+html[data-theme='dark'] .sidebar-toggle-control:hover {
+  background: #292643;
+}
+
+html[data-theme='dark'] .sidebar-toggle-bar {
+  color: #aab5c8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-toggle-control,
+  .sidebar-toggle-bar {
+    transition: none;
+  }
+}

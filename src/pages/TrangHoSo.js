@@ -1,37 +1,69 @@
 import { useRef } from 'react';
 import {
+  Activity,
   BadgeCheck,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
   Camera,
   CheckCircle2,
+  ChevronRight,
   CircleAlert,
+  FileUp,
   FolderKanban,
   HardDrive,
-  KeyRound,
   LoaderCircle,
   Mail,
-  MonitorSmartphone,
   Phone,
   Save,
-  Settings,
-  ShieldCheck,
   Sparkles,
   UserRound,
   Video,
 } from 'lucide-react';
+import { useNgonNgu } from '../contexts/NgonNguContext';
 import useAnhDaiDien from '../flows/useAnhDaiDien';
 import useHoSo from '../flows/useHoSo';
 import '../styles/ho-so.css';
 
 const thongKeHoSo = [
-  { label: 'Dự án', value: '24', icon: FolderKanban, tone: 'purple' },
-  { label: 'Video', value: '68', icon: Video, tone: 'blue' },
-  { label: 'Đã sử dụng', value: '18.6 GB', icon: HardDrive, tone: 'green' },
+  { labelKey: 'profile.projects', value: '0', icon: FolderKanban, tone: 'purple' },
+  { labelKey: 'profile.videos', value: '0', icon: Video, tone: 'blue' },
+  { labelKey: 'profile.used', value: '0 GB', icon: HardDrive, tone: 'green' },
 ];
 
-function TrangHoSo({ user, onOpenSettings }) {
+const tomTatHoatDong = [
+  {
+    labelKey: 'profile.projectsCompleted',
+    detailKey: 'profile.projectsCompletedDetail',
+    value: '0',
+    icon: FolderKanban,
+    tone: 'purple',
+  },
+  {
+    labelKey: 'profile.filesUploaded',
+    detailKey: 'profile.filesUploadedDetail',
+    value: '0',
+    icon: FileUp,
+    tone: 'blue',
+  },
+  {
+    labelKey: 'profile.videosCreated',
+    detailKey: 'profile.videosCreatedDetail',
+    value: '0',
+    icon: Video,
+    tone: 'green',
+  },
+];
+
+const chiTietDungLuong = [
+  { labelKey: 'dashboard.storage.documents', value: '0 GB', percent: 0, tone: 'purple' },
+  { labelKey: 'dashboard.storage.images', value: '0 GB', percent: 0, tone: 'pink' },
+  { labelKey: 'dashboard.storage.audio', value: '0 GB', percent: 0, tone: 'orange' },
+  { labelKey: 'dashboard.storage.video', value: '0 GB', percent: 0, tone: 'blue' },
+];
+
+function TrangHoSo({ user, onOpenStorage }) {
+  const { locale, t } = useNgonNgu();
   const avatarInputRef = useRef(null);
   const {
     hoSo,
@@ -49,15 +81,18 @@ function TrangHoSo({ user, onOpenSettings }) {
     loiAnh,
     thongBaoAnh,
   } = useAnhDaiDien(user);
-  const tenHienThi = hoSo.displayName.trim() || hoSo.fullName.trim() || user?.email?.split('@')[0] || 'Người dùng';
+  const tenHienThi = hoSo.displayName.trim()
+    || hoSo.fullName.trim()
+    || user?.email?.split('@')[0]
+    || t('profile.userFallback');
   const chuCaiDau = tenHienThi
     .split(/\s+/)
     .slice(-2)
     .map((phan) => phan.charAt(0).toUpperCase())
     .join('');
   const ngayThamGia = user?.created_at
-    ? new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' }).format(new Date(user.created_at))
-    : 'Chưa cập nhật';
+    ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(user.created_at))
+    : t('profile.notUpdated');
 
   return (
     <main className="profile-page">
@@ -67,26 +102,26 @@ function TrangHoSo({ user, onOpenSettings }) {
         <div className="profile-identity">
           <div className={`profile-avatar-large ${avatarUrl ? 'has-image' : ''}`}>
             {avatarUrl ? (
-              <img src={avatarUrl} alt={`Ảnh đại diện của ${tenHienThi}`} />
+              <img src={avatarUrl} alt={t('profile.avatarAlt', { name: tenHienThi })} />
             ) : (
               <span>{chuCaiDau}</span>
             )}
-            <i aria-label="Tài khoản đã xác thực"><BadgeCheck size={19} fill="currentColor" /></i>
+            <i aria-label={t('profile.verifiedAccount')}><BadgeCheck size={19} fill="currentColor" /></i>
           </div>
           <div className="profile-identity-copy">
-            <span className="profile-eyebrow"><Sparkles size={14} /> Hồ sơ sáng tạo</span>
+            <span className="profile-eyebrow"><Sparkles size={14} /> {t('profile.creativeProfile')}</span>
             <h1>{tenHienThi}</h1>
             <p><Mail size={14} /> {user?.email}</p>
             <div className="profile-tags">
-              <span>Creator</span>
-              <span><CalendarDays size={13} /> Tham gia {ngayThamGia}</span>
+              <span>{t('common.creator')}</span>
+              <span><CalendarDays size={13} /> {t('profile.joined', { date: ngayThamGia })}</span>
             </div>
             <input
               ref={avatarInputRef}
               className="profile-avatar-input"
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              aria-label="Chọn ảnh đại diện"
+              aria-label={t('profile.chooseAvatar')}
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 if (file) capNhatAnh(file);
@@ -100,9 +135,9 @@ function TrangHoSo({ user, onOpenSettings }) {
               onClick={() => avatarInputRef.current?.click()}
             >
               {dangTaiAnh ? (
-                <><LoaderCircle className="profile-spinner" size={15} /> Đang tải ảnh...</>
+                <><LoaderCircle className="profile-spinner" size={15} /> {t('profile.uploadingAvatar')}</>
               ) : (
-                <><Camera size={15} /> Đổi ảnh đại diện</>
+                <><Camera size={15} /> {t('profile.changeAvatar')}</>
               )}
             </button>
             {thongBaoAnh && <div className="profile-avatar-feedback success" role="status">{thongBaoAnh}</div>}
@@ -110,11 +145,11 @@ function TrangHoSo({ user, onOpenSettings }) {
           </div>
         </div>
 
-        <div className="profile-stats" aria-label="Thống kê tài khoản">
-          {thongKeHoSo.map(({ label, value, icon: Icon, tone }) => (
-            <div className="profile-stat" key={label}>
+        <div className="profile-stats" aria-label={t('profile.accountStats')}>
+          {thongKeHoSo.map(({ labelKey, value, icon: Icon, tone }) => (
+            <div className="profile-stat" key={labelKey}>
               <span className={tone}><Icon size={17} /></span>
-              <div><strong>{value}</strong><small>{label}</small></div>
+              <div><strong>{value}</strong><small>{t(labelKey)}</small></div>
             </div>
           ))}
         </div>
@@ -124,7 +159,7 @@ function TrangHoSo({ user, onOpenSettings }) {
         <section className="profile-card profile-form-card">
           <div className="profile-card-heading">
             <span><UserRound size={20} /></span>
-            <div><h2>Thông tin cá nhân</h2><p>Cập nhật thông tin hiển thị trong AI Video Studio.</p></div>
+            <div><h2>{t('profile.personalInfo')}</h2><p>{t('profile.personalInfoDescription')}</p></div>
           </div>
 
           <form
@@ -135,82 +170,135 @@ function TrangHoSo({ user, onOpenSettings }) {
             {dangTai && (
               <div className="profile-loading" role="status">
                 <LoaderCircle className="profile-spinner" size={17} />
-                Đang tải thông tin từ Supabase...
+                {t('profile.loadingProfile')}
               </div>
             )}
             <div className="profile-form-grid">
               <label className="profile-field" htmlFor="profileFullName">
-                <span>Họ và tên</span>
+                <span>{t('profile.fullName')}</span>
                 <div><UserRound size={17} /><input id="profileFullName" value={hoSo.fullName} onChange={capNhatTruong('fullName')} autoComplete="name" required /></div>
               </label>
 
               <label className="profile-field" htmlFor="profileDisplayName">
-                <span>Tên hiển thị</span>
+                <span>{t('profile.displayName')}</span>
                 <div><Sparkles size={17} /><input id="profileDisplayName" value={hoSo.displayName} onChange={capNhatTruong('displayName')} autoComplete="nickname" /></div>
               </label>
 
               <label className="profile-field" htmlFor="profileEmail">
-                <span>Email</span>
+                <span>{t('common.email')}</span>
                 <div className="readonly"><Mail size={17} /><input id="profileEmail" value={user?.email || ''} readOnly /></div>
-                <small>Email đăng nhập không chỉnh sửa tại đây.</small>
+                <small>{t('profile.loginEmailNote')}</small>
               </label>
 
               <label className="profile-field" htmlFor="profilePhone">
-                <span>Số điện thoại</span>
-                <div><Phone size={17} /><input id="profilePhone" value={hoSo.phone} onChange={capNhatTruong('phone')} autoComplete="tel" placeholder="Chưa cập nhật" /></div>
+                <span>{t('profile.phone')}</span>
+                <div><Phone size={17} /><input id="profilePhone" value={hoSo.phone} onChange={capNhatTruong('phone')} autoComplete="tel" placeholder={t('profile.phonePlaceholder')} /></div>
               </label>
 
               <label className="profile-field" htmlFor="profileCompany">
-                <span>Công ty / Đơn vị</span>
-                <div><Building2 size={17} /><input id="profileCompany" value={hoSo.company} onChange={capNhatTruong('company')} autoComplete="organization" placeholder="Tên công ty của bạn" /></div>
+                <span>{t('profile.company')}</span>
+                <div><Building2 size={17} /><input id="profileCompany" value={hoSo.company} onChange={capNhatTruong('company')} autoComplete="organization" placeholder={t('profile.companyPlaceholder')} /></div>
               </label>
 
               <label className="profile-field" htmlFor="profileJobTitle">
-                <span>Vai trò công việc</span>
-                <div><BriefcaseBusiness size={17} /><input id="profileJobTitle" value={hoSo.jobTitle} onChange={capNhatTruong('jobTitle')} autoComplete="organization-title" placeholder="Ví dụ: Content Creator" /></div>
+                <span>{t('profile.jobTitle')}</span>
+                <div><BriefcaseBusiness size={17} /><input id="profileJobTitle" value={hoSo.jobTitle} onChange={capNhatTruong('jobTitle')} autoComplete="organization-title" placeholder={t('profile.jobTitlePlaceholder')} /></div>
               </label>
             </div>
 
             <label className="profile-field profile-bio" htmlFor="profileBio">
-              <span>Giới thiệu bản thân</span>
-              <textarea id="profileBio" value={hoSo.bio} onChange={capNhatTruong('bio')} rows="4" maxLength="240" placeholder="Chia sẻ ngắn về bạn và công việc sáng tạo của bạn..." />
-              <small>{hoSo.bio.length}/240 ký tự</small>
+              <span>{t('profile.bio')}</span>
+              <textarea id="profileBio" value={hoSo.bio} onChange={capNhatTruong('bio')} rows="4" maxLength="240" placeholder={t('profile.bioPlaceholder')} />
+              <small>{t('profile.characterCount', { count: hoSo.bio.length })}</small>
             </label>
 
             {thongBao && <div className="profile-message success" role="status"><CheckCircle2 size={17} /> {thongBao}</div>}
             {loi && <div className="profile-message error" role="alert"><CircleAlert size={17} /> {loi}</div>}
 
             <div className="profile-form-actions">
-              <span>Dữ liệu được lưu tại bảng public.profiles trên Supabase.</span>
+              <span>{t('profile.dataLocation')}</span>
               <button type="submit" disabled={dangLuu || dangTai}>
-                {dangLuu ? <><LoaderCircle className="profile-spinner" size={17} /> Đang lưu...</> : <><Save size={17} /> Lưu thay đổi</>}
+                {dangLuu
+                  ? <><LoaderCircle className="profile-spinner" size={17} /> {t('profile.saving')}</>
+                  : <><Save size={17} /> {t('profile.saveChanges')}</>}
               </button>
             </div>
           </form>
         </section>
 
         <aside className="profile-sidebar">
-          <section className="profile-card account-status-card">
+          <section className="profile-card activity-summary-card">
             <div className="profile-card-heading compact">
-              <span><ShieldCheck size={19} /></span>
-              <div><h2>Trạng thái tài khoản</h2><p>Thông tin xác thực hiện tại.</p></div>
+              <span><Activity size={19} /></span>
+              <div><h2>{t('profile.activitySummaryTitle')}</h2><p>{t('profile.activitySummaryDescription')}</p></div>
             </div>
-            <div className="account-status-list">
-              <div><span><Mail size={17} /></span><div><strong>Email</strong><small>{user?.email_confirmed_at ? 'Đã xác thực' : 'Chưa xác thực'}</small></div><CheckCircle2 className={user?.email_confirmed_at ? 'verified' : 'pending'} size={18} /></div>
-              <div><span><CalendarDays size={17} /></span><div><strong>Thành viên từ</strong><small>{ngayThamGia}</small></div></div>
+            <div className="activity-summary-list">
+              {tomTatHoatDong.map(({ labelKey, detailKey, value, icon: Icon, tone }) => (
+                <div className="activity-summary-item" key={labelKey}>
+                  <span className={tone}><Icon size={18} /></span>
+                  <div>
+                    <strong>{t(labelKey)}</strong>
+                    <small>{t(detailKey)}</small>
+                  </div>
+                  <b>{value}</b>
+                </div>
+              ))}
             </div>
+            <p className="activity-summary-note">{t('profile.activitySummaryNote')}</p>
           </section>
 
-          <section className="profile-card security-card">
-            <div className="profile-card-heading compact">
-              <span><KeyRound size={19} /></span>
-              <div><h2>Bảo mật</h2><p>Quản lý an toàn tài khoản.</p></div>
+          <section className="profile-card profile-storage-card">
+            <div className="profile-storage-heading">
+              <h2>{t('dashboard.storage.title')}</h2>
+              <button type="button" onClick={onOpenStorage}>
+                {t('common.manage')} <ChevronRight size={14} />
+              </button>
             </div>
-            <div className="security-summary">
-              <div><span><KeyRound size={18} /></span><div><strong>Mật khẩu</strong><small>Được bảo vệ bởi Supabase Auth</small></div></div>
-              <div><span><MonitorSmartphone size={18} /></span><div><strong>Phiên đăng nhập</strong><small>Thiết bị hiện tại đang hoạt động</small></div></div>
+
+            <div className="profile-storage-overview">
+              <div
+                className="profile-storage-donut empty"
+                role="img"
+                aria-label={t('profile.storageUsageLabel')}
+              >
+                <div>
+                  <strong>0</strong>
+                  <span>{t('dashboard.storage.used')}</span>
+                </div>
+              </div>
+              <div className="profile-storage-totals">
+                <span>
+                  <small>{t('dashboard.storage.total')}</small>
+                  <strong>0 GB</strong>
+                </span>
+                <span>
+                  <small>{t('dashboard.storage.remaining')}</small>
+                  <strong>0 GB</strong>
+                </span>
+              </div>
             </div>
-            <button className="profile-settings-button" type="button" onClick={onOpenSettings}><Settings size={16} /> Mở cài đặt tài khoản</button>
+
+            <div className="profile-storage-list">
+              {chiTietDungLuong.map(({ labelKey, value, percent, tone }) => (
+                <div className={`profile-storage-row ${tone}`} key={labelKey}>
+                  <div className="profile-storage-label">
+                    <i />
+                    <span>{t(labelKey)}</span>
+                  </div>
+                  <div
+                    className="profile-storage-track"
+                    role="progressbar"
+                    aria-label={t(labelKey)}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow={percent}
+                  >
+                    <span style={{ width: `${percent}%` }} />
+                  </div>
+                  <b>{value}</b>
+                </div>
+              ))}
+            </div>
           </section>
         </aside>
       </div>
