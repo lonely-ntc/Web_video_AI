@@ -65,6 +65,39 @@ create trigger cap_nhat_tasks_updated_at
   before update on public.tasks
   for each row execute procedure public.cap_nhat_thoi_gian_task();
 
+-- Dam bao project_id/video_id gan vao Task phai thuoc ve dung tai khoan
+-- dang thao tac (khong the gan nham lien ket sang tai khoan khac).
+create or replace function public.kiem_tra_chu_so_huu_tasks()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.project_id is not null and not exists (
+    select 1 from public.projects
+    where id = new.project_id and user_id = new.user_id
+  ) then
+    raise exception 'project_id khong thuoc ve tai khoan nay';
+  end if;
+
+  if new.video_id is not null and not exists (
+    select 1 from public.videos
+    where id = new.video_id and user_id = new.user_id
+  ) then
+    raise exception 'video_id khong thuoc ve tai khoan nay';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.kiem_tra_chu_so_huu_tasks() from public;
+
+drop trigger if exists kiem_tra_chu_so_huu_tasks_trg on public.tasks;
+create trigger kiem_tra_chu_so_huu_tasks_trg
+  before insert or update on public.tasks
+  for each row execute procedure public.kiem_tra_chu_so_huu_tasks();
+
 alter table public.tasks enable row level security;
 
 grant select, insert, update, delete on table public.tasks to authenticated;
@@ -191,3 +224,23 @@ using (
       and tasks.user_id = (select auth.uid())
   )
 );
+
+-- Bat Realtime de trang Lich su tu cap nhat tien trinh tac vu/pipeline khi
+-- co insert/update/delete, khong can bam tai lai trang.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tasks'
+  ) then
+    alter publication supabase_realtime add table public.tasks;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'task_steps'
+  ) then
+    alter publication supabase_realtime add table public.task_steps;
+  end if;
+end;
+$$;

@@ -20,12 +20,20 @@ const CAC_COT_TAI_LIEU = [
   'updated_at',
 ].join(', ');
 
+const CAC_COT_TAI_LIEU_KEM_NOI = [
+  CAC_COT_TAI_LIEU,
+  'project:projects(name)',
+  'chapter:chapters(name)',
+].join(', ');
+
 function chuyenTaiLieuSangGiaoDien(banGhi, fileUrl = '') {
   return {
     id: banGhi.id,
     userId: banGhi.user_id,
     projectId: banGhi.project_id,
     chapterId: banGhi.chapter_id,
+    projectName: banGhi.project?.name || '',
+    chapterName: banGhi.chapter?.name || '',
     name: banGhi.name,
     filePath: banGhi.file_path,
     fileUrl,
@@ -45,7 +53,7 @@ async function themUrlFile(banGhi) {
 async function layDanhSachTaiLieu(userId) {
   const { data, error } = await supabase
     .from('documents')
-    .select(CAC_COT_TAI_LIEU)
+    .select(CAC_COT_TAI_LIEU_KEM_NOI)
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 

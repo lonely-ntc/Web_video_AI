@@ -8,6 +8,7 @@ import {
   taoTaiLieuNguoiDung,
   xoaTaiLieu,
 } from '../database/taiLieu';
+import useRealtimeLamMoi from './useRealtimeLamMoi';
 
 function dichLoiTaiLieu(error, t, fallbackKey) {
   if (['42P01', 'PGRST205'].includes(error?.code)) {
@@ -135,6 +136,12 @@ function useTaiLieu(user) {
     setDanhSachTaiLieu((hienTai) => [data, ...hienTai.filter((taiLieu) => taiLieu.id !== data.id)]);
     return { data, error: null };
   }, [t, user]);
+
+  useRealtimeLamMoi(
+    'documents',
+    userId ? `user_id=eq.${userId}` : null,
+    taiDanhSachTaiLieu,
+  );
 
   const doiTen = useCallback(async (documentId, tenMoi) => {
     if (!userId) return { data: null, error: { code: 'LOGIN_REQUIRED' } };

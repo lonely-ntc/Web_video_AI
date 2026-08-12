@@ -663,7 +663,7 @@ function TrangDashboard({
             avatars={danhSachAvatar}
             onBack={() => setActiveMenu('ProjectDetail')}
             onSelectAvatar={chonAvatar}
-            onUploadAvatar={(file) => taiLenAvatar(file)}
+            onUploadAvatar={(file) => taiLenAvatar(file, projectDangMo.id)}
             onCreateVideo={() => setActiveMenu('VideoGenerator')}
           />
         ) : activeMenu === 'VideoGenerator' && projectDangMo && chuongDangMo ? (

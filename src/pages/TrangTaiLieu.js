@@ -396,6 +396,7 @@ function TrangTaiLieu({
               <span />
               <span>{t('documentsPage.columns.name')}</span>
               <span>{t('documentsPage.columns.project')}</span>
+              <span>{t('documentsPage.columns.chapter')}</span>
               <span>{t('documentsPage.columns.type')}</span>
               <span>{t('documentsPage.columns.size')}</span>
               <span>{t('documentsPage.columns.date')}</span>
@@ -426,6 +427,7 @@ function TrangTaiLieu({
                   </span>
                   <span role="cell" className="documents-cell-name">{taiLieu.name}</span>
                   <span role="cell" className="documents-cell-muted">{tenProjectTheoId(taiLieu.projectId)}</span>
+                  <span role="cell" className="documents-cell-muted">{taiLieu.chapterName || t('documentsPage.noChapter')}</span>
                   <span role="cell">
                     <span className={`document-type-badge tone-${loai.tone}`}>
                       {t(`documentsPage.fileType.${taiLieu.fileType}`)}
@@ -614,6 +616,7 @@ function TrangTaiLieu({
 
             <dl className="documents-drawer-meta">
               <div><dt>{t('documentsPage.columns.project')}</dt><dd>{tenProjectTheoId(taiLieuXem.projectId)}</dd></div>
+              <div><dt>{t('documentsPage.columns.chapter')}</dt><dd>{taiLieuXem.chapterName || t('documentsPage.noChapter')}</dd></div>
               <div><dt>{t('documentsPage.columns.type')}</dt><dd>{t(`documentsPage.fileType.${taiLieuXem.fileType}`)}</dd></div>
               <div><dt>{t('documentsPage.columns.size')}</dt><dd>{dinhDangDungLuong(taiLieuXem.sizeBytes)}</dd></div>
               <div>

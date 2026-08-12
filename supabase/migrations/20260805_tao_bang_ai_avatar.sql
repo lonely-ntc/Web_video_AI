@@ -59,6 +59,31 @@ create trigger cap_nhat_ai_avatars_updated_at
   before update on public.ai_avatars
   for each row execute procedure public.cap_nhat_thoi_gian_avatar();
 
+-- Dam bao project_id gan vao Avatar phai thuoc ve dung tai khoan dang thao tac.
+create or replace function public.kiem_tra_chu_so_huu_ai_avatars()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.project_id is not null and not exists (
+    select 1 from public.projects
+    where id = new.project_id and user_id = new.user_id
+  ) then
+    raise exception 'project_id khong thuoc ve tai khoan nay';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.kiem_tra_chu_so_huu_ai_avatars() from public;
+
+drop trigger if exists kiem_tra_chu_so_huu_ai_avatars_trg on public.ai_avatars;
+create trigger kiem_tra_chu_so_huu_ai_avatars_trg
+  before insert or update on public.ai_avatars
+  for each row execute procedure public.kiem_tra_chu_so_huu_ai_avatars();
+
 -- Moi tai khoan chi truy cap Avatar cua chinh minh qua Supabase API.
 alter table public.ai_avatars enable row level security;
 
@@ -160,3 +185,16 @@ using (
   bucket_id = 'ai-avatars'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
+
+-- Bat Realtime de giao dien tu cap nhat danh sach Avatar AI khi co
+-- insert/update/delete, khong can bam tai lai trang.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'ai_avatars'
+  ) then
+    alter publication supabase_realtime add table public.ai_avatars;
+  end if;
+end;
+$$;

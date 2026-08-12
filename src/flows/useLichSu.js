@@ -6,6 +6,7 @@ import {
   layDanhSachLichSu,
   xoaTacVu,
 } from '../database/lichSu';
+import useRealtimeLamMoi from './useRealtimeLamMoi';
 
 function dichLoiLichSu(error, t, fallbackKey) {
   if (['42P01', 'PGRST205'].includes(error?.code)) {
@@ -74,6 +75,13 @@ function useLichSu(user) {
       conHoatDong = false;
     };
   }, [t, userId]);
+
+  useRealtimeLamMoi(
+    'tasks',
+    userId ? `user_id=eq.${userId}` : null,
+    taiDanhSachLichSu,
+  );
+  useRealtimeLamMoi('task_steps', userId ? true : null, taiDanhSachLichSu);
 
   const huy = useCallback(async (taskId) => {
     if (!userId) return { data: null, error: { code: 'LOGIN_REQUIRED' } };

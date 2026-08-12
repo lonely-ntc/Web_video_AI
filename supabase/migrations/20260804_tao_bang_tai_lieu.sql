@@ -5,6 +5,7 @@ create table if not exists public.documents (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   project_id uuid references public.projects(id) on delete set null,
+  chapter_id uuid,
   name text not null,
   file_path text not null,
   file_type text not null,
@@ -27,12 +28,19 @@ comment on table public.documents is
   'Tai lieu nguoi dung upload, moi ban ghi thuoc ve mot tai khoan Supabase.';
 comment on column public.documents.file_path is
   'Duong dan file trong bucket documents, khong luu signed URL.';
+comment on column public.documents.chapter_id is
+  'Chuong (trong bang public.chapters) ma tai lieu nay thuoc ve, co the de trong.
+   Rang buoc khoa ngoai duoc gan sau trong migration tao bang chapters
+   (20260808_tao_bang_chuong.sql) vi bang chapters chua ton tai luc nay.';
 
 create index if not exists documents_user_updated_at_idx
   on public.documents (user_id, updated_at desc);
 
 create index if not exists documents_user_project_idx
   on public.documents (user_id, project_id);
+
+create index if not exists documents_chapter_idx
+  on public.documents (chapter_id);
 
 -- Tu dong cap nhat updated_at khi Document thay doi.
 create or replace function public.cap_nhat_thoi_gian_tai_lieu()
@@ -52,6 +60,39 @@ drop trigger if exists cap_nhat_documents_updated_at on public.documents;
 create trigger cap_nhat_documents_updated_at
   before update on public.documents
   for each row execute procedure public.cap_nhat_thoi_gian_tai_lieu();
+
+-- Dam bao project_id/chapter_id gan vao Document phai thuoc ve dung tai
+-- khoan dang thao tac (khong the gan nham lien ket sang tai khoan khac).
+create or replace function public.kiem_tra_chu_so_huu_documents()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.project_id is not null and not exists (
+    select 1 from public.projects
+    where id = new.project_id and user_id = new.user_id
+  ) then
+    raise exception 'project_id khong thuoc ve tai khoan nay';
+  end if;
+
+  if new.chapter_id is not null and not exists (
+    select 1 from public.chapters
+    where id = new.chapter_id and user_id = new.user_id
+  ) then
+    raise exception 'chapter_id khong thuoc ve tai khoan nay';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.kiem_tra_chu_so_huu_documents() from public;
+
+drop trigger if exists kiem_tra_chu_so_huu_documents_trg on public.documents;
+create trigger kiem_tra_chu_so_huu_documents_trg
+  before insert or update on public.documents
+  for each row execute procedure public.kiem_tra_chu_so_huu_documents();
 
 -- Moi tai khoan chi truy cap Document cua chinh minh qua Supabase API.
 alter table public.documents enable row level security;
@@ -162,3 +203,16 @@ using (
   bucket_id = 'documents'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
+
+-- Bat Realtime de giao dien tu cap nhat danh sach tai lieu khi co
+-- insert/update/delete, khong can bam tai lai trang.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'documents'
+  ) then
+    alter publication supabase_realtime add table public.documents;
+  end if;
+end;
+$$;

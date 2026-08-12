@@ -8,6 +8,7 @@ import {
   xoaVideo,
 } from '../database/video';
 import { layUrlTaiXuongVideo } from '../database/fileVideo';
+import useRealtimeLamMoi from './useRealtimeLamMoi';
 
 function dichLoiVideo(error, t, fallbackKey) {
   if (['42P01', 'PGRST205'].includes(error?.code)) {
@@ -90,6 +91,12 @@ function useVideo(user) {
       conHoatDong = false;
     };
   }, [t, userId]);
+
+  useRealtimeLamMoi(
+    'videos',
+    userId ? `user_id=eq.${userId}` : null,
+    taiDanhSachVideo,
+  );
 
   const taiLenVideo = useCallback(async (file, projectId = null) => {
     setLoiTaiLenVideo('');

@@ -1,9 +1,13 @@
 import { useRef, useState } from 'react';
 import {
   ArrowLeft,
+  Bot,
+  ChevronDown,
+  ChevronUp,
   CircleAlert,
   Download,
   FileText,
+  History,
   LoaderCircle,
   PencilLine,
   Play,
@@ -15,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useNgonNgu } from '../contexts/NgonNguContext';
 import useChuongWorkspace from '../flows/useChuongWorkspace';
+import useKichBan from '../flows/useKichBan';
 import '../styles/chi-tiet-chuong.css';
 
 const TRANG_THAI_CHUONG = {
@@ -107,12 +112,17 @@ function TrangChiTietChuong({
     danhSachVideo, dangTaiVideo, loiVideo, xoaMotVideo, taiXuongVideo,
   } = useChuongWorkspace(user, project.id, chuong.id);
 
+  const {
+    danhSachKichBan, kichBanMoiNhat, dangTaiKichBan, loiKichBan, dangTaoBangAI, taoTuAI, xoaPhienBan,
+  } = useKichBan(user, project.id, chuong.id);
+
   const [dangChonAvatar, setDangChonAvatar] = useState(false);
   const [dangUploadAvatar, setDangUploadAvatar] = useState(false);
   const [dangTaiXuongVideoId, setDangTaiXuongVideoId] = useState(null);
   const [taiLieuDoiTen, setTaiLieuDoiTen] = useState(null);
   const [dangDoiTenTaiLieu, setDangDoiTenTaiLieu] = useState(false);
   const [loiDoiTenTaiLieu, setLoiDoiTenTaiLieu] = useState('');
+  const [hienLichSuKichBan, setHienLichSuKichBan] = useState(false);
 
   const avatarDaChon = avatars.find((avatar) => avatar.id === chuong.selectedAvatarId) || null;
 
@@ -234,11 +244,66 @@ function TrangChiTietChuong({
           />
         </CardMuc>
 
-        <CardMuc icon={FileText} title={t('chapterDetailPage.steps.script')}>
-          {chuong.script ? (
+        <CardMuc
+          icon={FileText}
+          title={t('chapterDetailPage.steps.script')}
+          action={(
+            <div className="chapter-script-actions">
+              <button
+                type="button"
+                className="chapter-inline-upload"
+                disabled={dangTaoBangAI}
+                onClick={taoTuAI}
+              >
+                {dangTaoBangAI ? <LoaderCircle size={13} className="chapter-spin" /> : <Bot size={13} />}
+                {t('chapterDetailPage.steps.generateWithAI')}
+              </button>
+              {danhSachKichBan.length > 1 && (
+                <button
+                  type="button"
+                  className="chapter-inline-upload"
+                  onClick={() => setHienLichSuKichBan((hienTai) => !hienTai)}
+                >
+                  <History size={13} />
+                  {t('chapterDetailPage.steps.scriptHistory', { count: danhSachKichBan.length })}
+                  {hienLichSuKichBan ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+              )}
+            </div>
+          )}
+        >
+          {loiKichBan && <p className="chapter-step-error"><CircleAlert size={13} /> {loiKichBan}</p>}
+          {dangTaiKichBan ? (
+            <div className="chapter-step-loading"><LoaderCircle size={16} className="chapter-spin" /></div>
+          ) : kichBanMoiNhat ? (
+            <>
+              <p className="chapter-script-view">{kichBanMoiNhat.content}</p>
+              <p className="chapter-script-meta">
+                {t('chapterDetailPage.steps.scriptVersion', { version: kichBanMoiNhat.version })}
+                {' • '}
+                {t('chapterDetailPage.steps.scriptWordCount', { count: kichBanMoiNhat.wordCount })}
+              </p>
+            </>
+          ) : chuong.script ? (
             <p className="chapter-script-view">{chuong.script}</p>
           ) : (
             <p className="chapter-step-empty">{t('chapterDetailPage.steps.scriptEmpty')}</p>
+          )}
+
+          {hienLichSuKichBan && danhSachKichBan.length > 1 && (
+            <ul className="chapter-script-history">
+              {danhSachKichBan.slice(1).map((kichBan) => (
+                <li key={kichBan.id}>
+                  <div>
+                    <strong>{t('chapterDetailPage.steps.scriptVersion', { version: kichBan.version })}</strong>
+                    <p>{kichBan.content}</p>
+                  </div>
+                  <button type="button" onClick={() => xoaPhienBan(kichBan.id)} aria-label={t('chapterPage.menu.delete')}>
+                    <Trash2 size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </CardMuc>
 

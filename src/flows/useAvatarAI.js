@@ -9,6 +9,7 @@ import {
   xoaAvatarAI,
 } from '../database/avatarAI';
 import { layUrlTaiXuongAvatarAI } from '../database/fileAvatarAI';
+import useRealtimeLamMoi from './useRealtimeLamMoi';
 
 function dichLoiAvatar(error, t, fallbackKey) {
   if (['42P01', 'PGRST205'].includes(error?.code)) {
@@ -136,6 +137,12 @@ function useAvatarAI(user) {
     setDanhSachAvatar((hienTai) => [data, ...hienTai.filter((avatar) => avatar.id !== data.id)]);
     return { data, error: null };
   }, [t, user]);
+
+  useRealtimeLamMoi(
+    'ai_avatars',
+    userId ? `user_id=eq.${userId}` : null,
+    taiDanhSachAvatar,
+  );
 
   const doiTen = useCallback(async (avatarId, tenMoi) => {
     if (!userId) return { data: null, error: { code: 'LOGIN_REQUIRED' } };

@@ -59,6 +59,34 @@ create trigger cap_nhat_videos_updated_at
   before update on public.videos
   for each row execute procedure public.cap_nhat_thoi_gian_video();
 
+-- Dam bao project_id gan vao Video phai thuoc ve dung tai khoan dang thao
+-- tac. Ham nay se duoc cap nhat them dieu kien kiem tra chapter_id trong
+-- migration tao bang chapters (20260808_tao_bang_chuong.sql), vi cot
+-- videos.chapter_id chi duoc them vao o buoc do.
+create or replace function public.kiem_tra_chu_so_huu_videos()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.project_id is not null and not exists (
+    select 1 from public.projects
+    where id = new.project_id and user_id = new.user_id
+  ) then
+    raise exception 'project_id khong thuoc ve tai khoan nay';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.kiem_tra_chu_so_huu_videos() from public;
+
+drop trigger if exists kiem_tra_chu_so_huu_videos_trg on public.videos;
+create trigger kiem_tra_chu_so_huu_videos_trg
+  before insert or update on public.videos
+  for each row execute procedure public.kiem_tra_chu_so_huu_videos();
+
 -- Moi tai khoan chi truy cap Video cua chinh minh qua Supabase API.
 alter table public.videos enable row level security;
 
@@ -160,3 +188,16 @@ using (
   bucket_id = 'videos'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
+
+-- Bat Realtime de giao dien tu cap nhat danh sach video khi co
+-- insert/update/delete, khong can bam tai lai trang.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'videos'
+  ) then
+    alter publication supabase_realtime add table public.videos;
+  end if;
+end;
+$$;
