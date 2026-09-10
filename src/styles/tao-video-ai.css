@@ -34,6 +34,11 @@
 .video-gen-check-row p { display: flex; align-items: center; gap: 8px; margin: 0; color: #269c73; font-size: .57rem; font-weight: 650; }
 .video-gen-check-row p span { display: inline-flex; align-items: center; gap: 4px; }
 .video-gen-check-row small { display: block; margin-top: 3px; color: var(--muted); font-size: .53rem; }
+.video-gen-script-block { flex: 1; }
+.video-gen-script-empty { margin: 0; color: var(--muted); font-size: .57rem; font-weight: 600; }
+.video-gen-script-error { color: #b3384a; }
+.video-gen-script-generate { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; padding: 0 10px; height: 27px; border: 1px solid var(--border); border-radius: 8px; color: var(--primary-dark); background: var(--primary-soft); font-size: .53rem; font-weight: 700; }
+.video-gen-script-generate:disabled { cursor: not-allowed; opacity: .6; }
 
 .video-gen-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .video-gen-form-grid label,
@@ -46,6 +51,37 @@
 .video-gen-slider input[type="range"] { width: 100%; accent-color: var(--primary); }
 .video-gen-slider strong { align-self: flex-end; color: var(--ink); font-size: .58rem; }
 .video-gen-preview-button { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 0 14px; height: 36px; border: 1px solid var(--border); border-radius: 9px; color: var(--primary-dark); background: var(--primary-soft); font-size: .56rem; font-weight: 700; }
+.video-gen-preview-button:disabled { cursor: not-allowed; opacity: .6; }
+
+.video-gen-field-label { margin: 16px 0 8px; color: var(--muted); font-size: .56rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.video-gen-field-label:first-of-type { margin-top: 0; }
+
+.video-gen-gender-toggle { display: flex; gap: 8px; }
+.video-gen-gender-toggle button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: transparent; font-size: .59rem; font-weight: 700; }
+.video-gen-gender-toggle button.active { color: var(--primary-dark); border-color: #b6abef; background: var(--primary-soft); }
+
+.video-gen-region-toggle { display: flex; gap: 7px; flex-wrap: wrap; }
+.video-gen-region-toggle button { flex: 1; min-width: 64px; min-height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: transparent; font-size: .55rem; font-weight: 700; }
+.video-gen-region-toggle button.active { color: white; border-color: var(--primary); background: var(--primary); }
+
+.video-gen-voice-picker { position: relative; padding: 10px 34px 10px 12px; border: 1px solid #dfe1e9; border-radius: 10px; background: #fbfcfe; }
+.video-gen-voice-select { width: 100%; border: 0; background: transparent; color: var(--ink); font-size: .62rem; font-weight: 700; appearance: none; }
+.video-gen-voice-select:disabled { opacity: .6; }
+.video-gen-voice-caret { position: absolute; top: 14px; right: 12px; color: var(--muted); pointer-events: none; }
+.video-gen-voice-meta { margin: 3px 0 0; color: var(--muted); font-size: .53rem; }
+
+.video-gen-generate-row { display: flex; justify-content: center; margin-top: 16px; }
+.video-gen-generate-button { display: inline-flex; align-items: center; gap: 7px; padding: 0 20px; height: 38px; border: 1px solid #6f5af2; border-radius: 10px; color: white; background: linear-gradient(135deg,#7864f4,#5c45dc); font-size: .58rem; font-weight: 750; }
+.video-gen-generate-button:disabled { cursor: not-allowed; opacity: .6; }
+.video-gen-confirm-button { display: inline-flex; align-items: center; gap: 7px; padding: 0 20px; height: 38px; border: 1px solid #269c73; border-radius: 10px; color: #269c73; background: #f2fbf7; font-size: .58rem; font-weight: 750; }
+.video-gen-confirm-button:disabled { cursor: not-allowed; opacity: .6; }
+.video-gen-voice-confirmed { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0 6px; color: #269c73; font-size: .58rem; font-weight: 700; }
+
+.video-gen-audio-player { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.video-gen-audio-player > button { flex: 0 0 auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; color: white; background: var(--primary); }
+.video-gen-audio-track { flex: 1; height: 6px; border-radius: 999px; overflow: hidden; background: #ebeef4; }
+.video-gen-audio-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#7762f4,#2e8cff); }
+.video-gen-audio-time { flex: 0 0 auto; color: var(--muted); font-size: .55rem; font-weight: 700; }
 .video-gen-checkbox { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--ink); font-size: .58rem; font-weight: 600; }
 .video-gen-checkbox input { width: 15px; height: 15px; accent-color: var(--primary); }
 
@@ -105,7 +141,14 @@ html[data-theme='dark'] .video-gen-card,
 html[data-theme='dark'] .video-gen-preview { border-color: #354159; }
 html[data-theme='dark'] .video-gen-tab > span { background: #232838; }
 html[data-theme='dark'] .video-gen-form-grid select { border-color: #354159; color: #dfe3ef; background: #141c2a; }
+html[data-theme='dark'] .video-gen-gender-toggle button,
+html[data-theme='dark'] .video-gen-region-toggle button { border-color: #354159; }
+html[data-theme='dark'] .video-gen-voice-picker { border-color: #354159; background: #141c2a; }
+html[data-theme='dark'] .video-gen-confirm-button { border-color: #1f4433; color: #6fd6ac; background: #16281f; }
+html[data-theme='dark'] .video-gen-voice-confirmed { color: #6fd6ac; }
+html[data-theme='dark'] .video-gen-audio-track { background: #303a4e; }
 html[data-theme='dark'] .video-gen-check-icon { color: #b6aaff; background: #302a56; }
+html[data-theme='dark'] .video-gen-script-generate { background: #232748; }
 html[data-theme='dark'] .video-gen-warning { border-color: #5c2a34; background: #2a1720; }
 html[data-theme='dark'] .video-gen-warning > p,
 html[data-theme='dark'] .video-gen-warning li { color: #ff9aa5; }

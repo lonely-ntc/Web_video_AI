@@ -10,7 +10,6 @@ import {
   FolderKanban,
   Grid2X2,
   List as ListIcon,
-  LoaderCircle,
   MoreHorizontal,
   PencilLine,
   Plus,
@@ -312,9 +311,18 @@ function TrangDuAn({
         </div>
 
         {loading ? (
-          <div className="projects-state">
-            <LoaderCircle className="projects-state-spinner" size={27} />
-            <h3>{t('projectsPage.loading')}</h3>
+          <div className="projects-skeleton-grid" aria-live="polite" aria-label={t('projectsPage.loading')}>
+            {Array.from({ length: 6 }).map((_, chiSo) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div className="projects-skeleton-card" key={chiSo} aria-hidden="true">
+                <div className="skeleton skeleton-thumb" />
+                <div className="projects-skeleton-card-body">
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-text" style={{ width: '85%' }} />
+                  <div className="skeleton skeleton-text" style={{ width: '55%' }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="projects-state error" role="alert">

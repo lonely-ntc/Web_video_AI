@@ -1,6 +1,7 @@
 html {
   min-width: 320px;
-  background: #f6f7fb;
+  background: var(--canvas, #f6f7fb);
+  transition: background var(--transition-base, .2s ease);
 }
 
 body {

@@ -1,7 +1,15 @@
-import { supabase } from './supabase';
+// Avatar AI (anh nhan vat dung de tao video) -> luu tren CLOUDINARY.
+// Cot `ai_avatars.file_path` bay gio chua secure_url cua Cloudinary.
 
-const TEN_BUCKET_AVATAR_AI = 'ai-avatars';
+import {
+  taiLenCloudinary,
+  urlTaiXuongTuUrl,
+  publicIdTuUrl,
+  xoaCloudinary,
+} from '../services/cloudinary';
+
 const KICH_THUOC_AVATAR_TOI_DA = 10 * 1024 * 1024;
+const THU_MUC_AVATAR = 'ai-video-web/avatars';
 
 const DINH_DANG_HOP_LE = {
   'image/png': 'PNG',
@@ -15,89 +23,53 @@ function suyLuanDinhDang(file) {
 
 function kiemTraAvatar(file) {
   if (!suyLuanDinhDang(file)) {
-    return {
-      code: 'INVALID_AVATAR_TYPE',
-      message: 'Avatar must be a PNG, JPG, or WebP image.',
-    };
+    return { code: 'INVALID_AVATAR_TYPE', message: 'Avatar must be a PNG, JPG, or WebP image.' };
   }
   if (file.size > KICH_THUOC_AVATAR_TOI_DA) {
-    return {
-      code: 'AVATAR_TOO_LARGE',
-      message: 'Avatar cannot be larger than 10 MB.',
-    };
+    return { code: 'AVATAR_TOO_LARGE', message: 'Avatar cannot be larger than 10 MB.' };
   }
   return null;
-}
-
-function layKichThuocAnh(file) {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: null, height: null });
-    };
-    img.src = url;
-  });
 }
 
 async function taiFileAvatarAI(userId, avatarId, file) {
   const loiKiemTra = kiemTraAvatar(file);
   if (loiKiemTra) return { data: null, error: loiKiemTra };
 
-  const duongDan = `${userId}/${avatarId}/${file.name}`;
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_AVATAR_AI)
-    .upload(duongDan, file, {
-      cacheControl: '3600',
-      contentType: file.type,
-      upsert: true,
-    });
-
+  const { data, error } = await taiLenCloudinary(file, {
+    resourceType: 'image',
+    folder: `${THU_MUC_AVATAR}/${userId}/${avatarId}`,
+    tags: ['avatar', userId],
+  });
   if (error) return { data: null, error };
-  const kichThuoc = await layKichThuocAnh(file);
+
   return {
-    data: { path: data.path, format: suyLuanDinhDang(file), ...kichThuoc },
+    data: {
+      path: data.url,
+      format: suyLuanDinhDang(file),
+      width: data.width || null,
+      height: data.height || null,
+    },
     error: null,
   };
 }
 
-async function layUrlAvatarAI(duongDan) {
-  if (!duongDan) return { data: { url: '' }, error: null };
-
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_AVATAR_AI)
-    .createSignedUrl(duongDan, 3600);
-
-  if (error) return { data: { url: '' }, error };
-  return { data: { url: data.signedUrl || '' }, error: null };
+async function layUrlAvatarAI(filePath) {
+  return { data: { url: filePath || '' }, error: null };
 }
 
-async function layUrlTaiXuongAvatarAI(duongDan, tenFile) {
-  if (!duongDan) return { data: { url: '' }, error: null };
-
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_AVATAR_AI)
-    .createSignedUrl(duongDan, 300, { download: tenFile || true });
-
-  if (error) return { data: { url: '' }, error };
-  return { data: { url: data.signedUrl || '' }, error: null };
+async function layUrlTaiXuongAvatarAI(filePath, tenFile) {
+  if (!filePath) return { data: { url: '' }, error: null };
+  return { data: { url: urlTaiXuongTuUrl(filePath, tenFile) }, error: null };
 }
 
-async function xoaFileAvatarAI(duongDan) {
-  if (!duongDan) return { data: null, error: null };
-  return supabase.storage
-    .from(TEN_BUCKET_AVATAR_AI)
-    .remove([duongDan]);
+async function xoaFileAvatarAI(filePath) {
+  if (!filePath) return { data: null, error: null };
+  const { publicId, resourceType } = publicIdTuUrl(filePath);
+  return xoaCloudinary(publicId, resourceType);
 }
 
 export {
   KICH_THUOC_AVATAR_TOI_DA,
-  TEN_BUCKET_AVATAR_AI,
   kiemTraAvatar,
   layUrlAvatarAI,
   layUrlTaiXuongAvatarAI,

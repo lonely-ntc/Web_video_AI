@@ -9,3 +9,12 @@
 .auth-floating-field input:focus ~ label,
 .auth-floating-field input:not(:placeholder-shown) ~ label,
 .auth-floating-field input:-webkit-autofill ~ label { top: 0; margin-left: 14px; padding: 4px 7px; color: #6650e1; background: var(--auth-label-bg); transform: translateY(-50%) scale(.9); }
+
+html[data-theme='dark'] .auth-floating-field input { border-color: #354159; color: #e4e7f2; background: #141c2a; }
+html[data-theme='dark'] .auth-floating-field label { color: #8b93a9; }
+html[data-theme='dark'] .auth-floating-field input:focus,
+html[data-theme='dark'] .auth-floating-field input:not(:placeholder-shown) { border-color: #554b83; background: #141c2a; }
+html[data-theme='dark'] .auth-floating-field input:focus { border-color: #8f80ed; box-shadow: 0 0 0 3px rgba(111, 90, 242, .18); }
+html[data-theme='dark'] .auth-floating-field input:focus ~ label,
+html[data-theme='dark'] .auth-floating-field input:not(:placeholder-shown) ~ label,
+html[data-theme='dark'] .auth-floating-field input:-webkit-autofill ~ label { color: #b6aaff; }

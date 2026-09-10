@@ -1,12 +1,77 @@
 :root {
+  /* Mau he thong: 1 mau chinh + 1 mau phu (dung cho nhan mau/diem nhan phu)
+     + cac mau trang thai success/warning/error/info. Moi component moi nen
+     tham chieu bo bien nay thay vi tu chon mau rieng. */
   --primary: #6f5af2;
   --primary-dark: #5540d9;
   --primary-soft: #f0edff;
+  --secondary: #2e8cff;
+  --secondary-dark: #1c6fe0;
+  --secondary-soft: #eaf4ff;
+  --success: #1f9d6f;
+  --success-dark: #167a56;
+  --success-soft: #e8f7f1;
+  --warning: #d98a1f;
+  --warning-dark: #b06f14;
+  --warning-soft: #fff3e0;
+  --error: #e5484d;
+  --error-dark: #c53338;
+  --error-soft: #fdeced;
+  --info: #2e8cff;
+  --info-dark: #1c6fe0;
+  --info-soft: #eaf4ff;
+
   --ink: #1e2030;
   --muted: #73788c;
   --border: #e8e9f1;
   --surface: #ffffff;
   --canvas: #f6f7fb;
+
+  /* Thang khoang cach chuan: dung boi so cua cac gia tri nay cho margin/
+     padding/gap thay vi so tuy tien, giup layout deu va chuyen nghiep hon. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Thang border-radius va shadow dung chung cho Button/Input/Card/Modal/
+     Dropdown/Table/Badge de tat ca component nhin dong bo. */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(30, 25, 60, .05);
+  --shadow-md: 0 8px 24px rgba(30, 25, 60, .08);
+  --shadow-lg: 0 18px 48px rgba(30, 25, 60, .14);
+
+  --transition-fast: .15s ease;
+  --transition-base: .2s ease;
+  --transition-slow: .3s ease;
+}
+
+/* Dark mode: chi doi lai cac token nen/chu/border va phan "soft" cua mau
+   trang thai. Khong doi --primary/--secondary (mau thuong hieu giu nguyen
+   sac do, cac trang con da tu xu ly rieng phan dark cua chung). */
+:root[data-theme='dark'] {
+  --ink: #e4e7f2;
+  --muted: #8b93a9;
+  --border: #354159;
+  --surface: #141c2a;
+  --canvas: #0d1320;
+
+  --success-soft: #123527;
+  --success-dark: #4ad999;
+  --warning-soft: #3a2a12;
+  --warning-dark: #e3a752;
+  --error-soft: #3a1516;
+  --error-dark: #ff8086;
+  --info-soft: #132840;
+  --info-dark: #6fb3ff;
 }
 
 * { box-sizing: border-box; }
@@ -425,10 +490,10 @@ button { cursor: pointer; }
 .project-cell > span:last-child { min-width: 0; display: flex; flex-direction: column; }
 .project-cell strong { overflow: hidden; color: #313345; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .project-cell small { overflow: hidden; margin-top: 4px; color: #9699a8; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.status-badge { display: inline-flex; padding: 4px 7px; border-radius: 7px; font-size: 8px; font-weight: 700; white-space: nowrap; }
-.status-badge.success { color: #258866; background: #e8f7f1; }
-.status-badge.processing { color: #5570d7; background: #edf1ff; }
-.status-badge.draft { color: #7d8190; background: #f0f1f4; }
+.status-badge { display: inline-flex; padding: 4px 7px; border-radius: var(--radius-sm); font-size: 8px; font-weight: 700; white-space: nowrap; }
+.status-badge.success { color: var(--success-dark); background: var(--success-soft); }
+.status-badge.processing { color: var(--info-dark); background: var(--info-soft); }
+.status-badge.draft { color: var(--muted); background: #f0f1f4; }
 .table-actions { display: flex; justify-content: flex-end; gap: 3px; }
 .table-actions button { width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; color: #777b8c; background: transparent; }
 .table-actions button:hover:not(:disabled) { color: var(--primary); background: #f1efff; }
@@ -484,11 +549,134 @@ button { cursor: pointer; }
 .activity-item small { flex: 0 0 auto; color: #a1a4b0; font-size: 7px; }
 .activity-item i { width: 1px; height: 16px; position: absolute; bottom: -1px; left: 14px; background: #e7e4f7; }
 
-.toast { position: fixed; right: 24px; bottom: 24px; z-index: 100; display: flex; align-items: center; gap: 10px; max-width: min(400px, calc(100vw - 32px)); padding: 12px 13px; border: 1px solid #d8eede; border-radius: 12px; color: #267e60; background: #f4fff9; box-shadow: 0 15px 40px rgba(34, 78, 61, .16); font-size: 11px; font-weight: 600; animation: toast-in .25s ease-out; }
-.toast button { width: 27px; height: 27px; display: grid; place-items: center; margin-left: auto; padding: 0; border: 0; border-radius: 7px; color: #6d8f81; background: transparent; }
+.toast { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 100; display: flex; align-items: center; gap: var(--space-2); max-width: min(400px, calc(100vw - 32px)); padding: var(--space-3); border: 1px solid #d8eede; border-radius: var(--radius-md); color: var(--success-dark); background: #f4fff9; box-shadow: var(--shadow-lg); font-size: 11px; font-weight: 600; animation: toast-in .25s ease-out; }
+.toast button { width: 27px; height: 27px; display: grid; place-items: center; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); color: #6d8f81; background: transparent; transition: background var(--transition-fast); }
+.toast button:hover { background: rgba(31, 157, 111, .12); }
+.toast.error { border-color: #f6c6c8; color: var(--error-dark); background: var(--error-soft); }
+.toast.error button { color: #b95458; }
+.toast.error button:hover { background: rgba(229, 72, 77, .12); }
+.toast.warning { border-color: #f3dbb0; color: var(--warning-dark); background: var(--warning-soft); }
+.toast.warning button { color: #a5793a; }
+.toast.warning button:hover { background: rgba(217, 138, 31, .12); }
+.toast.info { border-color: #c7ddf9; color: var(--info-dark); background: var(--info-soft); }
+.toast.info button { color: #4c7cb0; }
+.toast.info button:hover { background: rgba(46, 140, 255, .12); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
 
+/* Badge dung chung - thay the moi trang tu dinh nghia mau rieng cho trang thai */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.badge-neutral { color: var(--muted); background: #f0f1f4; }
+.badge-success { color: var(--success-dark); background: var(--success-soft); }
+.badge-warning { color: var(--warning-dark); background: var(--warning-soft); }
+.badge-error { color: var(--error-dark); background: var(--error-soft); }
+.badge-info { color: var(--info-dark); background: var(--info-soft); }
+
+/* Skeleton loading - dung khi dang tai du lieu thay vi man hinh trong/spinner don */
+.skeleton { position: relative; overflow: hidden; border-radius: var(--radius-sm); background: #eceef3; }
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .65), transparent);
+  animation: skeleton-shine 1.4s ease-in-out infinite;
+}
+.skeleton-text { height: 12px; margin: 6px 0; }
+.skeleton-title { height: 18px; width: 55%; margin: 4px 0 10px; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: var(--radius-md); flex: 0 0 auto; }
+.skeleton-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-md); }
+@keyframes skeleton-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+html[data-theme='dark'] .skeleton { background: #232a3c; }
+html[data-theme='dark'] .skeleton::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .08), transparent); }
+
+/* Empty state dung chung: icon + tieu de + mo ta + nut hanh dong,
+   thay the man hinh trong khong co goi y cho nguoi dung. */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); min-height: 220px; padding: var(--space-8) var(--space-4); text-align: center; }
+.empty-state-icon { width: 56px; height: 56px; display: grid; place-items: center; margin-bottom: var(--space-1); border-radius: var(--radius-lg); color: var(--primary-dark); background: var(--primary-soft); }
+.empty-state h3 { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+.empty-state p { max-width: 340px; margin: 0; color: var(--muted); font-size: 11.5px; line-height: 1.6; }
+.empty-state-action { margin-top: var(--space-2); }
+.empty-state.compact { min-height: 120px; padding: var(--space-4); gap: 6px; }
+.empty-state.compact .empty-state-icon { width: 40px; height: 40px; margin-bottom: 0; border-radius: var(--radius-md); }
+.empty-state.compact h3 { font-size: 11.5px; }
+.empty-state.compact p { font-size: 10px; }
+
 .sr-only { width: 1px; height: 1px; position: absolute; overflow: hidden; padding: 0; margin: -1px; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+/* Dark mode - override cac mau viet cung (khong qua bien) trong khung
+   suon chinh: sidebar/topbar/panel/stat-card/quick-action/table/popover. */
+html[data-theme='dark'] .sidebar { background: #0f1524; }
+html[data-theme='dark'] .topbar { background: rgba(13, 19, 32, .9); }
+html[data-theme='dark'] .search-box { border-color: var(--border); color: #9aa2b8; background: #0f1524; }
+html[data-theme='dark'] .search-box:focus-within { border-color: #6f5af2; background: #141c2a; }
+html[data-theme='dark'] .search-box input::placeholder { color: #6b7285; }
+html[data-theme='dark'] .search-shortcut { border-color: var(--border); color: #8b93a9; background: #0f1524; }
+html[data-theme='dark'] .icon-button { color: #a6acc0; }
+html[data-theme='dark'] .icon-button:hover { color: #b6aaff; background: #232a4d; }
+html[data-theme='dark'] .profile-button { color: #a6acc0; }
+html[data-theme='dark'] .profile-button:hover { background: #1a2233; }
+html[data-theme='dark'] .header-popover { background: #141c2a; box-shadow: 0 18px 48px rgba(0, 0, 0, .4); }
+html[data-theme='dark'] .popover-title,
+html[data-theme='dark'] .mini-notification,
+html[data-theme='dark'] .profile-popover > span { border-color: var(--border); }
+html[data-theme='dark'] .profile-popover button { color: #b8bfd1; }
+html[data-theme='dark'] .profile-popover button:hover { background: #1a2233; }
+
+html[data-theme='dark'] .welcome-card { border-color: #3a3560; background: linear-gradient(120deg, rgba(35, 30, 60, .9) 0%, rgba(20, 24, 38, .92) 52%, rgba(19, 34, 51, .9) 100%); }
+html[data-theme='dark'] .welcome-copy h1 { color: #f0f1f8; }
+html[data-theme='dark'] .welcome-copy p { color: #9aa2b8; }
+html[data-theme='dark'] .secondary-button { border-color: var(--border); color: #c3c8d8; background: rgba(20, 28, 42, .8); }
+html[data-theme='dark'] .secondary-button:hover { border-color: #554b83; color: #b6aaff; background: #1a2233; }
+
+html[data-theme='dark'] .stat-card, html[data-theme='dark'] .panel { background: #141c2a; box-shadow: 0 6px 22px rgba(0, 0, 0, .18); }
+html[data-theme='dark'] .stat-icon.purple, html[data-theme='dark'] .quick-icon.purple { color: #b6aaff; background: #2a2456; }
+html[data-theme='dark'] .stat-icon.blue, html[data-theme='dark'] .quick-icon.blue { color: #73b7ff; background: #17324f; }
+html[data-theme='dark'] .stat-icon.orange, html[data-theme='dark'] .quick-icon.orange { color: #f7b476; background: #3d2c1c; }
+html[data-theme='dark'] .stat-icon.pink, html[data-theme='dark'] .quick-icon.pink { color: #ff9dc0; background: #3b2130; }
+html[data-theme='dark'] .stat-icon.green, html[data-theme='dark'] .quick-icon.green { color: #66d3aa; background: #16352a; }
+html[data-theme='dark'] .stat-icon.indigo, html[data-theme='dark'] .quick-icon.indigo { color: #93a4ff; background: #212a56; }
+html[data-theme='dark'] .quick-icon.red { color: #ff9a9c; background: #3d2020; }
+html[data-theme='dark'] .stat-content strong { color: #eef0f8; }
+html[data-theme='dark'] .stat-content small { color: #767d90; }
+
+html[data-theme='dark'] .section-heading h2 { color: #eef0f8; }
+html[data-theme='dark'] .quick-action { border-color: var(--border); color: var(--ink); background: #10182a; }
+html[data-theme='dark'] .quick-action:hover { border-color: #554b83; background: #1a2233; }
+html[data-theme='dark'] .quick-action.featured { border-color: #453d78; background: #1e1a3d; }
+html[data-theme='dark'] .quick-arrow { color: #5b6274; }
+
+html[data-theme='dark'] .processing-item { border-top-color: var(--border); }
+html[data-theme='dark'] .processing-thumbnail { color: #b6aaff; background: linear-gradient(145deg, #232a4d, #1a2036); }
+html[data-theme='dark'] .progress-track { background: #232a3c; }
+html[data-theme='dark'] .processing-meta { color: #767d90; }
+
+html[data-theme='dark'] .recent-table th { border-bottom-color: var(--border); color: #767d90; }
+html[data-theme='dark'] .recent-table td { border-bottom-color: var(--border); color: #b8bfd1; }
+html[data-theme='dark'] .recent-table tbody tr:hover { background: #1a2233; }
+html[data-theme='dark'] .project-icon { color: #b6aaff; background: #2a2456; }
+html[data-theme='dark'] .project-cell strong { color: #eef0f8; }
+html[data-theme='dark'] .project-cell small { color: #767d90; }
+html[data-theme='dark'] .table-actions button:hover:not(:disabled) { background: #232a4d; }
+
+html[data-theme='dark'] .storage-donut::after { background: #141c2a; }
+html[data-theme='dark'] .storage-donut.empty { background: #232a3c; }
+html[data-theme='dark'] .storage-list { border-top-color: var(--border); }
+html[data-theme='dark'] .storage-label { color: #b8bfd1; }
+html[data-theme='dark'] .storage-bar { background: #232a3c; }
+html[data-theme='dark'] .storage-row strong { color: #b8bfd1; }
+
+html[data-theme='dark'] .notification-item { border-top-color: var(--border); }
+html[data-theme='dark'] .notification-item strong { color: #eef0f8; }
+html[data-theme='dark'] .notification-item p { color: #8b93a9; }
+html[data-theme='dark'] .notification-icon.success { color: #4ad999; background: #123527; }
+html[data-theme='dark'] .notification-icon.info { color: #6fb3ff; background: #132840; }
+html[data-theme='dark'] .notification-icon.purple { color: #b6aaff; background: #2a2456; }
+html[data-theme='dark'] .notification-icon.danger { color: #ff8086; background: #3a1516; }
+
+html[data-theme='dark'] .activity-icon { border-color: #3a3560; color: #b6aaff; background: #1e1a3d; }
+html[data-theme='dark'] .activity-item strong { color: #c3c8d8; }
+html[data-theme='dark'] .activity-item i { background: #3a3560; }
+
+html[data-theme='dark'] .empty-state-icon { color: #b6aaff; background: #2a2456; }
 
 @media (max-width: 1320px) {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }

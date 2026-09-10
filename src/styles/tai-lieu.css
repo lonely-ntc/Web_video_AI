@@ -68,6 +68,12 @@
 .documents-action-menu button:disabled { cursor: not-allowed; opacity: .45; }
 .documents-action-menu button:disabled:hover { background: transparent; }
 
+.documents-skeleton-row { display: flex; align-items: center; gap: 14px; padding: 13px 6px; border-bottom: 1px solid var(--border); }
+.documents-skeleton-row:last-child { border-bottom: 0; }
+.documents-skeleton-row .skeleton-avatar { width: 30px; height: 30px; }
+.documents-skeleton-row-body { flex: 1; min-width: 0; }
+.documents-skeleton-row .skeleton-text:last-child { margin-bottom: 0; }
+
 .documents-empty { min-height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 35px 20px 25px; text-align: center; }
 .documents-empty > span { width: 66px; height: 66px; display: grid; place-items: center; border-radius: 20px; color: var(--primary); background: var(--primary-soft); box-shadow: 0 12px 28px rgba(111,90,242,.1); }
 .documents-empty > span.tone-red { color: #d94b5b; background: #ffe9ec; }

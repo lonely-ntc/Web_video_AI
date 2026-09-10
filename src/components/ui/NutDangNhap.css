@@ -66,6 +66,11 @@
 .login-cta:hover .login-circle { width: 220px; height: 220px; opacity: 1; }
 .login-cta:active { transform: scale(.95); box-shadow: 0 0 0 4px #adff2f; }
 
+html[data-theme='dark'] .login-cta { color: #c9d3f0; box-shadow: 0 0 0 2px #354159; }
+html[data-theme='dark'] .login-cta:hover { color: #eef0f8; }
+html[data-theme='dark'] .login-arrow { color: #c9d3f0; }
+html[data-theme='dark'] .login-circle { background: #2a2456; }
+
 @media (max-width: 430px) {
   .login-cta { min-width: 116px; padding: 0 26px; }
   .login-arrow-right { right: 12px; }

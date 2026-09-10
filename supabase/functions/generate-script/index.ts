@@ -1,6 +1,9 @@
 // Edge Function: generate-script
 // Nhan chapterId, doc noi dung tai lieu (.txt/.md) da upload cho chuong do,
-// goi OpenAI de tao kich ban, roi luu ket qua vao bang public.scripts.
+// goi OpenAI MOT LAN de tao DONG THOI:
+//   1. content : kich ban video (loi thoai, chia doan)
+//   2. slides  : noi dung slide PPT tuong ung (khop tung doan voi kich ban)
+// roi luu ca hai vao cung mot ban ghi public.scripts (cot content + slides).
 //
 // Chay bang chinh JWT cua nguoi dung goi request (khong dung service_role),
 // nen moi truy van/insert deu tu dong bi RLS gioi han theo dung tai khoan do.
@@ -20,6 +23,40 @@ const CORS_HEADERS = {
 
 const CAC_DINH_DANG_DOC_DUOC_VAN_BAN = new Set(['txt', 'md']);
 const OPENAI_MODEL = 'gpt-4o-mini';
+
+// Luoc do JSON bat buoc cho ket qua OpenAI: vua kich ban, vua slide PPT.
+const LUOC_DO_BAI_GIANG = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['script', 'slides'],
+  properties: {
+    script: {
+      type: 'string',
+      description: 'Toan bo kich ban video (loi thoai, chia doan).',
+    },
+    slides: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['type', 'title', 'bullets', 'note'],
+        properties: {
+          type: { type: 'string', enum: ['title', 'section', 'content', 'summary'] },
+          title: { type: 'string' },
+          bullets: {
+            type: 'array',
+            description: 'Cac gach dau dong ngan gon. De mang rong [] voi slide type title/section.',
+            items: { type: 'string' },
+          },
+          note: {
+            type: 'string',
+            description: 'Doan loi thoai tuong ung slide nay, trich tu script.',
+          },
+        },
+      },
+    },
+  },
+};
 
 function traLoiJson(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -130,13 +167,25 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: OPENAI_MODEL,
         temperature: 0.7,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'bai_giang',
+            strict: true,
+            schema: LUOC_DO_BAI_GIANG,
+          },
+        },
         messages: [
           {
             role: 'system',
-            content: 'Ban la tro ly viet kich ban video huong dan/dao tao bang tieng Viet. '
-              + 'Dua tren tai lieu nguon duoc cung cap, viet mot kich ban video ro rang, '
-              + 'mach lac, chia thanh cac doan tu nhien de nguoi dan chuong trinh doc thanh loi thoai. '
-              + 'Khong bia them thong tin khong co trong tai lieu.',
+            content: 'Ban la tro ly soan bai giang video bang tieng Viet. Dua HOAN TOAN tren tai lieu '
+              + 'nguon duoc cung cap (khong bia them), hay tao DONG THOI hai thu khop nhau:\n'
+              + '1. "script": kich ban video hoan chinh - loi thoai tu nhien, mach lac, chia doan, '
+              + 'de nguoi dan chuong trinh doc truc tiep.\n'
+              + '2. "slides": danh sach slide PPT cho bai giang do. Slide dau type "title"; xen ke '
+              + 'type "section" cho moi phan lon; type "content" co "title" + "bullets" (3-6 y ngan gon, '
+              + 'KHONG phai cau van dai); slide cuoi type "summary". Moi slide co "note" la doan loi thoai '
+              + 'tuong ung trong script (ghep tat ca "note" lai phai sat voi toan bo script).',
           },
           { role: 'user', content: prompt },
         ],
@@ -151,7 +200,17 @@ Deno.serve(async (req) => {
     }
 
     const openaiData = await openaiRes.json();
-    const noiDungKichBan = openaiData.choices?.[0]?.message?.content?.trim();
+    const noiDungTho = openaiData.choices?.[0]?.message?.content?.trim();
+
+    let ketQua;
+    try {
+      ketQua = JSON.parse(noiDungTho);
+    } catch {
+      return traLoiJson({ error: { code: 'INVALID_OPENAI_JSON', message: 'OpenAI tra ve JSON khong hop le.' } }, 502);
+    }
+
+    const noiDungKichBan = (ketQua?.script || '').trim();
+    const danhSachSlide = Array.isArray(ketQua?.slides) ? ketQua.slides : [];
 
     if (!noiDungKichBan) {
       return traLoiJson({ error: { code: 'EMPTY_OPENAI_RESPONSE', message: 'OpenAI khong tra ve noi dung.' } }, 502);
@@ -174,6 +233,7 @@ Deno.serve(async (req) => {
         project_id: chuong.project_id,
         chapter_id: chapterId,
         content: noiDungKichBan,
+        slides: danhSachSlide,
         version: phienBanMoi,
         status: 'completed',
         source: 'ai',

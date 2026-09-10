@@ -23,3 +23,7 @@
 .settings-switch.enabled { background: #6f5af2; }
 .settings-switch.enabled span { transform: translateX(20px); }
 .settings-switch:hover { box-shadow: 0 0 0 4px rgba(111, 90, 242, .1); }
+
+html[data-theme='dark'] .settings-switch { background: #354159; }
+html[data-theme='dark'] .settings-switch span { background: #e4e7f2; box-shadow: 0 2px 7px rgba(0, 0, 0, .35); }
+html[data-theme='dark'] .settings-switch.enabled { background: #6f5af2; }

@@ -19,7 +19,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev": "concurrently -k -n web,tts,avatar,ppt,media -c blue,green,magenta,yellow,cyan \"npm:dev:web\" \"npm:dev:tts\" \"npm:dev:avatar\" \"npm:dev:ppt\" \"npm:dev:media\"",
+    "dev:web": "react-scripts start",
+    "dev:tts": "cd local-ai/tts-service && \"%LOCALAPPDATA%\\Programs\\Python\\Python313\\python.exe\" -m uvicorn app:app --host 127.0.0.1 --port 8001 --reload",
+    "dev:avatar": "cd local-ai/avatar-service && conda run -n echomimic --no-capture-output python -m uvicorn api:app --host 127.0.0.1 --port 8002",
+    "dev:ppt": "cd local-ai/ppt-service && (if not exist node_modules npm install) && npm start",
+    "dev:media": "cd local-ai/media-service && npm start"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^10.0.5",
     "supabase": "^2.113.0",
     "typescript": "~5.3.3"
   }

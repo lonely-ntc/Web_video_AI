@@ -22,3 +22,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local AI services (VieNeu-TTS, EchoMimicV2) - chuyển máy bằng cách copy folder, không qua git
+/local-ai/

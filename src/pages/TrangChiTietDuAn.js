@@ -456,9 +456,15 @@ function TrangChiTietDuAn({
             <h2 className="chapter-section-title">{t('chapterPage.sectionTitle')}</h2>
 
             {dangTaiChuong ? (
-              <div className="chapter-empty">
-                <LoaderCircle className="project-edit-spinner" size={24} />
-                <p>{t('chapterPage.loading')}</p>
+              <div className="chapter-list" aria-live="polite" aria-label={t('chapterPage.loading')}>
+                {Array.from({ length: 3 }).map((_, chiSo) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <div className="chapter-skeleton-card" key={chiSo} aria-hidden="true">
+                    <div className="skeleton skeleton-title" />
+                    <div className="skeleton skeleton-text" style={{ width: '90%' }} />
+                    <div className="skeleton skeleton-text" style={{ width: '40%' }} />
+                  </div>
+                ))}
               </div>
             ) : loiTaiChuong ? (
               <div className="chapter-empty" role="alert">

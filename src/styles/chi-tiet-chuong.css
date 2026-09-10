@@ -31,6 +31,11 @@
 
 .chapter-step-empty { margin: 0; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: .56rem; text-align: center; }
 .chapter-step-loading { display: flex; align-items: center; justify-content: center; padding: 14px; color: var(--primary); }
+.chapter-skeleton-list { display: flex; flex-direction: column; gap: 6px; }
+.chapter-skeleton-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 9px; }
+.chapter-skeleton-row .skeleton-avatar { width: 25px; height: 25px; border-radius: 7px; }
+.chapter-skeleton-row-body { flex: 1; min-width: 0; }
+.chapter-skeleton-row .skeleton-text:last-child { margin-bottom: 0; }
 .chapter-step-error { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: #d94b5b; font-size: .55rem; }
 .chapter-step-note { margin: 8px 0 0; color: var(--muted); font-size: .52rem; }
 .chapter-step-footer { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 9px; }

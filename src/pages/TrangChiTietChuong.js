@@ -206,7 +206,17 @@ function TrangChiTietChuong({
         >
           {loiTaiLieu && <p className="chapter-step-error"><CircleAlert size={13} /> {loiTaiLieu}</p>}
           {dangTaiTaiLieu ? (
-            <div className="chapter-step-loading"><LoaderCircle size={16} className="chapter-spin" /></div>
+            <div className="chapter-skeleton-list" aria-live="polite" aria-label={t('documentsPage.loading')}>
+              {Array.from({ length: 2 }).map((_, chiSo) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <div className="chapter-skeleton-row" key={chiSo} aria-hidden="true">
+                  <div className="skeleton skeleton-avatar" />
+                  <div className="chapter-skeleton-row-body">
+                    <div className="skeleton skeleton-text" style={{ width: '55%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : danhSachTaiLieu.length > 0 ? (
             <ul className="chapter-file-list">
               {danhSachTaiLieu.map((taiLieu) => (
@@ -274,7 +284,11 @@ function TrangChiTietChuong({
         >
           {loiKichBan && <p className="chapter-step-error"><CircleAlert size={13} /> {loiKichBan}</p>}
           {dangTaiKichBan ? (
-            <div className="chapter-step-loading"><LoaderCircle size={16} className="chapter-spin" /></div>
+            <div aria-live="polite" aria-label={t('common.loading')}>
+              <div className="skeleton skeleton-text" style={{ width: '100%' }} aria-hidden="true" />
+              <div className="skeleton skeleton-text" style={{ width: '95%' }} aria-hidden="true" />
+              <div className="skeleton skeleton-text" style={{ width: '70%' }} aria-hidden="true" />
+            </div>
           ) : kichBanMoiNhat ? (
             <>
               <p className="chapter-script-view">{kichBanMoiNhat.content}</p>
@@ -347,7 +361,17 @@ function TrangChiTietChuong({
         <CardMuc icon={Video} title={t('chapterDetailPage.steps.video')}>
           {loiVideo && <p className="chapter-step-error"><CircleAlert size={13} /> {loiVideo}</p>}
           {dangTaiVideo ? (
-            <div className="chapter-step-loading"><LoaderCircle size={16} className="chapter-spin" /></div>
+            <div className="chapter-skeleton-list" aria-live="polite" aria-label={t('videoPage.loading')}>
+              {Array.from({ length: 2 }).map((_, chiSo) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <div className="chapter-skeleton-row" key={chiSo} aria-hidden="true">
+                  <div className="skeleton skeleton-avatar" />
+                  <div className="chapter-skeleton-row-body">
+                    <div className="skeleton skeleton-text" style={{ width: '55%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : danhSachVideo.length > 0 ? (
             <ul className="chapter-file-list">
               {danhSachVideo.map((video) => (

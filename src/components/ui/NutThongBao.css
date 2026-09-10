@@ -72,6 +72,12 @@
   animation: notification-bell-ring .65s ease-out both;
 }
 
+html[data-theme='dark'] .notification-trigger:hover { background: rgba(182, 170, 255, .12); }
+html[data-theme='dark'] .css-bell { border-color: #c9d3f0; }
+html[data-theme='dark'] .css-bell::before,
+html[data-theme='dark'] .css-bell::after { background: #c9d3f0; }
+html[data-theme='dark'] .notification-badge { border-color: #0d1320; }
+
 @keyframes notification-bell-ring {
   0%, 100% { transform: rotate(0deg) scale(1); }
   20% { transform: rotate(15deg) scale(1); }

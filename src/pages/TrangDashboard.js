@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
+  Bell,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  CircleAlert,
   Clock3,
   Download,
   Eye,
@@ -420,6 +422,7 @@ function TrangDashboard({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState('');
+  const [loaiToast, setLoaiToast] = useState('success');
   const [projectDangMoId, setProjectDangMoId] = useState(null);
   const [chuongDangMoId, setChuongDangMoId] = useState(null);
   const fileInputRef = useRef(null);
@@ -481,14 +484,10 @@ function TrangDashboard({
     danhSachVideo,
     dangTaiVideo,
     loiTaiVideo,
-    dangTaiLenMap: dangTaiLenVideoMap,
-    loiTaiLenVideo,
     taiDanhSachVideo,
-    taiLenVideo,
     doiTen: doiTenVideo,
     taiXuong: taiXuongVideo,
     xoa: xoaVideo,
-    xoaLoiTaiLen: xoaLoiTaiLenVideo,
   } = useVideo(user);
   const {
     danhSachTacVu,
@@ -526,8 +525,9 @@ function TrangDashboard({
     );
   }, [language, searchQuery, t]);
 
-  const showToast = (message) => {
+  const showToast = (message, loai = 'success') => {
     setToast(message);
+    setLoaiToast(loai);
     window.setTimeout(() => setToast(''), 3200);
   };
 
@@ -573,7 +573,10 @@ function TrangDashboard({
 
   const handleSaveProject = async (duLieu, hanhDong) => {
     const { error } = await luuDuAn(duLieu);
-    if (error) return;
+    if (error) {
+      showToast(t('createProjectPage.errors.saveFailed'), 'error');
+      return;
+    }
 
     const thongBaoTheoHanhDong = {
       save: 'createProjectPage.savedForBackend',
@@ -724,21 +727,15 @@ function TrangDashboard({
           />
         ) : activeMenu === 'Videos' ? (
           <TrangVideo
-            user={user}
             projects={danhSachDuAn}
             videos={danhSachVideo}
             loading={dangTaiVideo}
             error={loiTaiVideo}
-            uploadingMap={dangTaiLenVideoMap}
-            uploadError={loiTaiLenVideo}
-            onLogin={onLogin}
             onRetry={taiDanhSachVideo}
-            onUpload={(file) => taiLenVideo(file)}
             onRename={doiTenVideo}
             onDownload={taiXuongVideo}
             onDelete={xoaVideo}
             onOpenProject={handleOpenProject}
-            onClearUploadError={xoaLoiTaiLenVideo}
           />
         ) : activeMenu === 'History' ? (
           <TrangLichSu
@@ -866,10 +863,10 @@ function TrangDashboard({
                     </article>
                   ))}
                   {processingVideos.length === 0 && (
-                    <div className="panel-empty">
-                      <Video size={23} />
-                      <strong>{t('dashboard.progress.emptyTitle')}</strong>
-                      <span>{t('dashboard.progress.emptyDescription')}</span>
+                    <div className="empty-state compact">
+                      <span className="empty-state-icon"><Video size={20} /></span>
+                      <h3>{t('dashboard.progress.emptyTitle')}</h3>
+                      <p>{t('dashboard.progress.emptyDescription')}</p>
                     </div>
                   )}
                 </div>
@@ -910,10 +907,10 @@ function TrangDashboard({
                     </tbody>
                   </table>
                   {filteredRecentItems.length === 0 && (
-                    <div className="empty-search">
-                      <Search size={24} />
-                      <strong>{t(searchQuery ? 'dashboard.recent.emptySearchTitle' : 'dashboard.recent.emptyTitle')}</strong>
-                      <span>{t(searchQuery ? 'dashboard.recent.emptySearchDescription' : 'dashboard.recent.emptyDescription')}</span>
+                    <div className="empty-state compact">
+                      <span className="empty-state-icon"><Search size={20} /></span>
+                      <h3>{t(searchQuery ? 'dashboard.recent.emptySearchTitle' : 'dashboard.recent.emptyTitle')}</h3>
+                      <p>{t(searchQuery ? 'dashboard.recent.emptySearchDescription' : 'dashboard.recent.emptyDescription')}</p>
                     </div>
                   )}
                 </div>
@@ -954,9 +951,10 @@ function TrangDashboard({
                     </article>
                   ))}
                   {notifications.length === 0 && (
-                    <div className="panel-empty compact">
-                      <strong>{t('dashboard.notifications.emptyTitle')}</strong>
-                      <span>{t('dashboard.notifications.emptyDescription')}</span>
+                    <div className="empty-state compact">
+                      <span className="empty-state-icon"><Bell size={20} /></span>
+                      <h3>{t('dashboard.notifications.emptyTitle')}</h3>
+                      <p>{t('dashboard.notifications.emptyDescription')}</p>
                     </div>
                   )}
                 </div>
@@ -973,9 +971,10 @@ function TrangDashboard({
                     </div>
                   ))}
                   {activities.length === 0 && (
-                    <div className="panel-empty compact">
-                      <strong>{t('dashboard.activities.emptyTitle')}</strong>
-                      <span>{t('dashboard.activities.emptyDescription')}</span>
+                    <div className="empty-state compact">
+                      <span className="empty-state-icon"><Activity size={20} /></span>
+                      <h3>{t('dashboard.activities.emptyTitle')}</h3>
+                      <p>{t('dashboard.activities.emptyDescription')}</p>
                     </div>
                   )}
                 </div>
@@ -987,8 +986,8 @@ function TrangDashboard({
       </div>
 
       {toast && (
-        <div className="toast" role="status">
-          <CheckCircle2 size={19} />
+        <div className={`toast ${loaiToast === 'error' ? 'error' : ''}`} role="status">
+          {loaiToast === 'error' ? <CircleAlert size={19} /> : <CheckCircle2 size={19} />}
           <span>{toast}</span>
           <button onClick={() => setToast('')}><X size={17} /><span className="sr-only">{t('dashboard.close')}</span></button>
         </div>

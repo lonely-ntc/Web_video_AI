@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -10,17 +10,14 @@ import {
   FolderOpen,
   HardDrive,
   Loader2,
-  LoaderCircle,
   MoreHorizontal,
   Pause,
   PencilLine,
   Play,
-  Plus,
   RefreshCw,
   Search,
   Share2,
   Trash2,
-  UploadCloud,
   Video as VideoIcon,
   X,
   XCircle,
@@ -175,24 +172,17 @@ function TheVideo({
 }
 
 function TrangVideo({
-  user,
   projects = [],
   videos = [],
   loading = false,
   error = '',
-  uploadingMap = {},
-  uploadError = '',
-  onLogin,
   onRetry,
-  onUpload,
   onRename,
   onDownload,
   onDelete,
   onOpenProject,
-  onClearUploadError,
 }) {
   const { locale, t } = useNgonNgu();
-  const inputFileRef = useRef(null);
 
   const [tuKhoa, setTuKhoa] = useState('');
   const [boLoc, setBoLoc] = useState('all');
@@ -201,8 +191,6 @@ function TrangVideo({
   const [trangHienTai, setTrangHienTai] = useState(1);
   const [menuDangMo, setMenuDangMo] = useState(null);
   const [videoXem, setVideoXem] = useState(null);
-  const [hienModalUpload, setHienModalUpload] = useState(false);
-  const [dangKeoTha, setDangKeoTha] = useState(false);
   const [videoDoiTen, setVideoDoiTen] = useState(null);
   const [tenMoi, setTenMoi] = useState('');
   const [dangTaiXuongId, setDangTaiXuongId] = useState(null);
@@ -256,32 +244,6 @@ function TrangVideo({
     (trangHopLe - 1) * SO_VIDEO_MOI_TRANG,
     trangHopLe * SO_VIDEO_MOI_TRANG,
   );
-  const dangTaiLenDanhSach = Object.values(uploadingMap);
-
-  const moUpload = () => {
-    if (!user) {
-      onLogin?.();
-      return;
-    }
-    onClearUploadError?.();
-    setHienModalUpload(true);
-  };
-
-  const guiFileLen = (files) => {
-    Array.from(files || []).forEach((file) => onUpload?.(file));
-  };
-
-  const xuLyChonFile = (event) => {
-    guiFileLen(event.target.files);
-    event.target.value = '';
-  };
-
-  const xuLyThaFile = (event) => {
-    event.preventDefault();
-    setDangKeoTha(false);
-    guiFileLen(event.dataTransfer.files);
-  };
-
   const lamMoi = async () => {
     setDangLamMoi(true);
     await onRetry?.();
@@ -418,10 +380,6 @@ function TrangVideo({
         <button type="button" className="video-refresh" onClick={lamMoi}>
           <RefreshCw size={16} className={dangLamMoi ? 'spin' : ''} /> {t('videoPage.refresh')}
         </button>
-
-        <button type="button" className="video-export-button" onClick={moUpload}>
-          <Plus size={16} /> {t('videoPage.exportNew')}
-        </button>
       </section>
 
       <section className="video-list-panel">
@@ -431,9 +389,17 @@ function TrangVideo({
         </div>
 
         {loading ? (
-          <div className="video-empty">
-            <LoaderCircle className="video-empty-spinner" size={27} />
-            <h3>{t('videoPage.loading')}</h3>
+          <div className="video-grid" aria-live="polite" aria-label={t('videoPage.loading')}>
+            {Array.from({ length: 8 }).map((_, chiSo) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div className="video-skeleton-card" key={chiSo} aria-hidden="true">
+                <div className="skeleton skeleton-thumb" />
+                <div className="video-skeleton-card-body">
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-text" style={{ width: '60%' }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="video-empty" role="alert">
@@ -462,11 +428,6 @@ function TrangVideo({
             <span><VideoIcon size={32} /></span>
             <h3>{t(coBoLoc ? 'videoPage.emptyFilteredTitle' : 'videoPage.emptyTitle')}</h3>
             <p>{t(coBoLoc ? 'videoPage.emptyFilteredDescription' : 'videoPage.emptyDescription')}</p>
-            {!coBoLoc && (
-              <button type="button" onClick={moUpload}>
-                <Plus size={17} /> {t('videoPage.exportNew')}
-              </button>
-            )}
           </div>
         )}
 
@@ -492,54 +453,6 @@ function TrangVideo({
           </nav>
         )}
       </section>
-
-      {hienModalUpload && (
-        <ModalNen title={t('videoPage.dropzone.title')} onClose={() => setHienModalUpload(false)}>
-          <div
-            className={`video-dropzone ${dangKeoTha ? 'active' : ''}`}
-            onDragOver={(event) => { event.preventDefault(); setDangKeoTha(true); }}
-            onDragLeave={() => setDangKeoTha(false)}
-            onDrop={xuLyThaFile}
-            onClick={() => inputFileRef.current?.click()}
-            role="button"
-            tabIndex={0}
-          >
-            <UploadCloud size={30} />
-            <p>{t('videoPage.dropzone.title')}</p>
-            <span>{t('videoPage.dropzone.or')}</span>
-            <button type="button" onClick={(event) => { event.stopPropagation(); inputFileRef.current?.click(); }}>
-              <Plus size={15} /> {t('videoPage.dropzone.upload')}
-            </button>
-            <div className="video-dropzone-formats">
-              <span>MP4</span><span>MOV</span><span>WEBM</span>
-            </div>
-            <input
-              ref={inputFileRef}
-              type="file"
-              accept="video/mp4,video/quicktime,video/webm"
-              multiple
-              hidden
-              onChange={xuLyChonFile}
-            />
-          </div>
-
-          {uploadError && (
-            <p className="video-upload-error" role="alert">{uploadError}</p>
-          )}
-
-          {dangTaiLenDanhSach.map((muc, chiSo) => (
-            <div className="video-upload-progress" key={`${muc.ten}-${chiSo}`}>
-              <div className="video-upload-progress-head">
-                <span>{muc.ten}</span>
-                <strong>{muc.phanTram}%</strong>
-              </div>
-              <div className="video-upload-progress-track">
-                <span style={{ width: `${muc.phanTram}%` }} />
-              </div>
-            </div>
-          ))}
-        </ModalNen>
-      )}
 
       {videoDoiTen && (
         <ModalNen title={t('videoPage.renameModal.title')} onClose={() => setVideoDoiTen(null)}>

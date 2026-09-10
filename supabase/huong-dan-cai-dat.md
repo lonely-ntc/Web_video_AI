@@ -181,6 +181,29 @@ Sau khi chạy xong:
 - Trang **Chi tiết Chương** hiển thị kịch bản mới nhất từ bảng này (nếu có),
   kèm nút xem lịch sử các phiên bản cũ và xóa từng phiên bản.
 
+## Cài đặt bảng Âm thanh giọng đọc (VieNeu-TTS)
+
+1. Trong **SQL Editor**, tạo một truy vấn mới.
+2. Đặt tên truy vấn là `tao_bang_voice_audio`.
+3. Sao chép toàn bộ nội dung file
+   `migrations/20260814_tao_bang_am_thanh_giong_doc.sql`.
+4. Nhấn **Run**. File có thể chạy lại an toàn khi cần cập nhật policy.
+
+Sau khi chạy xong:
+
+- Bảng `public.voice_audio` xuất hiện trong **Table Editor → public → voice_audio**,
+  lưu file âm thanh giọng đọc (VieNeu-TTS) **đã được người dùng xác nhận
+  dùng cho video** của một Chương.
+- Bucket Storage `voice-audio` (riêng tư, tối đa 20 MB, chỉ nhận `.wav`)
+  được tạo để lưu file thật, đường dẫn theo quy ước `user_id/chapter_id/...`.
+- **Quan trọng:** các lần bấm "Nghe thử" trong wizard Tạo Video AI **không**
+  lưu vào bảng này và **không** upload lên Storage — chỉ phát tạm thời ở
+  trình duyệt (qua `URL.createObjectURL`). Chỉ khi người dùng bấm **"Chọn
+  giọng này"** (xác nhận dùng cho video thật) hệ thống mới gọi lại
+  `tts-service` để tạo âm thanh từ **toàn bộ kịch bản** rồi lưu lên Supabase.
+- Người dùng đăng nhập chỉ có thể đọc/tạo/sửa/xóa âm thanh giọng đọc của
+  chính mình (RLS + trigger kiểm tra `project_id`/`chapter_id` cùng tài khoản).
+
 ## Cài đặt Edge Function tạo kịch bản bằng OpenAI
 
 Nút **"Tạo kịch bản bằng AI"** ở trang Chi tiết Chương gọi một Supabase Edge

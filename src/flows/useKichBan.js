@@ -7,6 +7,7 @@ import {
   taoKichBanMoi,
   xoaKichBan,
 } from '../database/kichBan';
+import { taoPptTuKichBan } from '../services/baiGiangPpt';
 import useRealtimeLamMoi from './useRealtimeLamMoi';
 
 function dichLoiKichBan(error, t) {
@@ -24,6 +25,8 @@ function useKichBan(user, projectId, chapterId) {
   const [loiKichBan, setLoiKichBan] = useState('');
   const [dangTaoKichBan, setDangTaoKichBan] = useState(false);
   const [dangTaoBangAI, setDangTaoBangAI] = useState(false);
+  const [dangTaoPpt, setDangTaoPpt] = useState(false);
+  const [loiPpt, setLoiPpt] = useState('');
 
   const kichBanMoiNhat = danhSachKichBan[0] || null;
 
@@ -94,6 +97,21 @@ function useKichBan(user, projectId, chapterId) {
     return { data, error: null };
   }, [t, userId]);
 
+  // Tao file PPT tu nen slide da co san trong 1 ban ghi kich ban.
+  // Mac dinh dung phien ban moi nhat; truyen kichBanCuThe de chon ban khac.
+  const taiPpt = useCallback(async (chuong, duAn, kichBanCuThe) => {
+    const kichBan = kichBanCuThe || kichBanMoiNhat;
+    setDangTaoPpt(true);
+    setLoiPpt('');
+    const { data, error } = await taoPptTuKichBan(kichBan, chuong, duAn);
+    setDangTaoPpt(false);
+    if (error) {
+      setLoiPpt(error.message || t('scriptPage.errors.actionFailed'));
+      return { data: null, error };
+    }
+    return { data, error: null };
+  }, [kichBanMoiNhat, t]);
+
   const xoaPhienBan = useCallback(async (scriptId) => {
     if (!userId) return { error: { code: 'LOGIN_REQUIRED' } };
     const { error } = await xoaKichBan(userId, scriptId);
@@ -112,9 +130,12 @@ function useKichBan(user, projectId, chapterId) {
     loiKichBan,
     dangTaoKichBan,
     dangTaoBangAI,
+    dangTaoPpt,
+    loiPpt,
     taiLaiDanhSach,
     taoPhienBanMoi,
     taoTuAI,
+    taiPpt,
     suaKichBan,
     xoaPhienBan,
   };

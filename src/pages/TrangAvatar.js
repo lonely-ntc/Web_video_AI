@@ -8,7 +8,6 @@ import {
   FolderKanban,
   HardDrive,
   ImageIcon,
-  LoaderCircle,
   MoreHorizontal,
   PencilLine,
   Plus,
@@ -402,9 +401,17 @@ function TrangAvatar({
         </div>
 
         {loading ? (
-          <div className="avatar-empty">
-            <LoaderCircle className="avatar-empty-spinner" size={27} />
-            <h3>{t('avatarPage.loading')}</h3>
+          <div className="avatar-grid" aria-live="polite" aria-label={t('avatarPage.loading')}>
+            {Array.from({ length: 8 }).map((_, chiSo) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div className="avatar-skeleton-card" key={chiSo} aria-hidden="true">
+                <div className="skeleton skeleton-thumb" />
+                <div className="avatar-skeleton-card-body">
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-text" style={{ width: '60%' }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="avatar-empty" role="alert">

@@ -16,6 +16,9 @@ const mockUnsubscribe = jest.fn();
 
 jest.mock('./database/supabase', () => ({
   supabase: {
+    from: jest.fn(),
+    channel: jest.fn(),
+    removeChannel: jest.fn(),
     auth: {
       getSession: jest.fn(),
       onAuthStateChange: jest.fn(),
@@ -46,6 +49,31 @@ jest.mock('./database/duAn', () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   window.localStorage.clear();
+  supabase.from.mockImplementation(() => {
+    const ketQua = Promise.resolve({ data: [], error: null });
+    const truyVan = {
+      select: jest.fn(() => truyVan),
+      insert: jest.fn(() => truyVan),
+      update: jest.fn(() => truyVan),
+      delete: jest.fn(() => truyVan),
+      eq: jest.fn(() => truyVan),
+      is: jest.fn(() => truyVan),
+      in: jest.fn(() => truyVan),
+      order: jest.fn(() => truyVan),
+      limit: jest.fn(() => truyVan),
+      single: jest.fn(() => truyVan),
+      maybeSingle: jest.fn(() => truyVan),
+      then: ketQua.then.bind(ketQua),
+    };
+    return truyVan;
+  });
+  supabase.channel.mockImplementation(() => {
+    const kenh = {
+      on: jest.fn(() => kenh),
+      subscribe: jest.fn(() => kenh),
+    };
+    return kenh;
+  });
   supabase.auth.getSession.mockResolvedValue({
     data: { session: null },
     error: null,
@@ -261,11 +289,11 @@ test('opens the selected Supabase project detail page', async () => {
   await screen.findByRole('heading', { name: 'Project Chi tiết' });
   fireEvent.click(screen.getByRole('button', { name: 'Mở Project' }));
 
-  expect(await screen.findByText('Thông tin cơ bản được lưu trên Supabase.')).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Thông tin Project' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Project Chi tiết' })).toBeInTheDocument();
-  expect(screen.getByText('Nội dung chi tiết từ Supabase')).toBeInTheDocument();
+  expect(screen.getAllByText('Nội dung chi tiết từ Supabase').length).toBeGreaterThan(0);
   expect(screen.getAllByText('25%').length).toBeGreaterThan(0);
-  expect(screen.getByRole('tab', { name: 'Tài liệu' })).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: 'Thêm chương' }).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('button', { name: 'Quay lại danh sách Project' }));
   expect(await screen.findByRole('heading', { name: /^dự án$/i })).toBeInTheDocument();
@@ -298,7 +326,7 @@ test('switches the entire website to English and remembers the selection', async
   render(<App />);
 
   expect(screen.getByRole('button', { name: /^dự án$/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /^thư viện giọng nói$/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^avatar$/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^hồ sơ$/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /^cài đặt$/i }));
   const languageSelect = await screen.findByLabelText('Ngôn ngữ');
@@ -306,7 +334,7 @@ test('switches the entire website to English and remembers the selection', async
 
   expect(await screen.findByRole('heading', { name: /^settings$/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^projects$/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /^voice library$/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^avatar$/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^profile$/i })).toBeInTheDocument();
   expect(screen.getByText('Appearance settings')).toBeInTheDocument();
   expect(screen.getByText('Notification settings')).toBeInTheDocument();

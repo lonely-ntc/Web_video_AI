@@ -85,6 +85,11 @@
 .project-list .project-progress { margin-top: 11px; }
 .project-list .project-footer { margin-top: 11px; }
 
+.projects-skeleton-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 18px 0 3px; }
+.projects-skeleton-card { overflow: hidden; border: 1px solid var(--border); border-radius: 15px; background: var(--surface); }
+.projects-skeleton-card .skeleton-thumb { border-radius: 0; aspect-ratio: unset; height: 128px; }
+.projects-skeleton-card-body { padding: 14px; }
+
 .projects-empty { min-height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 35px 20px 25px; text-align: center; }
 .projects-empty > span { width: 66px; height: 66px; display: grid; place-items: center; border-radius: 20px; color: var(--primary); background: var(--primary-soft); box-shadow: 0 12px 28px rgba(111,90,242,.1); }
 .projects-empty h3 { margin: 17px 0 7px; color: var(--ink); font-size: .85rem; }
@@ -126,7 +131,7 @@ html[data-theme='dark'] .projects-state > span { color: #ff929f; background: #41
 @media (max-width: 1080px) {
   .projects-toolbar { grid-template-columns: 1fr auto auto; }
   .projects-filters { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; }
-  .projects-collection.card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .projects-collection.card, .projects-skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .projects-page { padding: 24px 18px 42px; }
@@ -136,7 +141,7 @@ html[data-theme='dark'] .projects-state > span { color: #ff929f; background: #41
   .projects-filters { grid-column: auto; grid-row: auto; }
   .projects-filters button { flex: 1 0 auto; }
   .projects-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .projects-collection.card { grid-template-columns: 1fr; }
+  .projects-collection.card, .projects-skeleton-grid { grid-template-columns: 1fr; }
   .project-list { grid-template-columns: 105px minmax(0, 1fr); }
 }
 @media (max-width: 520px) {

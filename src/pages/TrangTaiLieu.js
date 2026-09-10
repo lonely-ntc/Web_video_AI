@@ -7,7 +7,6 @@ import {
   FileText,
   FolderInput,
   HardDrive,
-  LoaderCircle,
   MoreHorizontal,
   Eye,
   Files,
@@ -378,9 +377,17 @@ function TrangTaiLieu({
         </div>
 
         {loading ? (
-          <div className="documents-empty">
-            <LoaderCircle className="documents-empty-spinner" size={27} />
-            <h3>{t('documentsPage.loading')}</h3>
+          <div className="documents-table" aria-live="polite" aria-label={t('documentsPage.loading')}>
+            {Array.from({ length: 6 }).map((_, chiSo) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div className="documents-skeleton-row" key={chiSo} aria-hidden="true">
+                <div className="skeleton skeleton-avatar" />
+                <div className="documents-skeleton-row-body">
+                  <div className="skeleton skeleton-text" style={{ width: '45%' }} />
+                  <div className="skeleton skeleton-text" style={{ width: '25%' }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="documents-empty" role="alert">

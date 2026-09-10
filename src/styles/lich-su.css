@@ -71,6 +71,10 @@
 .history-action-menu button.danger { color: #d94b5b; }
 .history-action-menu button.danger:hover { background: #fff0f2; }
 
+.history-skeleton-row { display: flex; align-items: center; gap: 14px; padding: 13px 6px; border-bottom: 1px solid var(--border); }
+.history-skeleton-row:last-child { border-bottom: 0; }
+.history-skeleton-row-body { flex: 1; min-width: 0; }
+
 .history-empty { min-height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 35px 20px 25px; text-align: center; }
 .history-empty > span { width: 66px; height: 66px; display: grid; place-items: center; border-radius: 20px; color: var(--primary); background: var(--primary-soft); box-shadow: 0 12px 28px rgba(111,90,242,.1); }
 .history-empty > span.tone-red { color: #d94b5b; background: #ffe9ec; }

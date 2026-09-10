@@ -1,7 +1,15 @@
-import { supabase } from './supabase';
+// Video AI hoan chinh -> luu tren CLOUDINARY (khong con dung Supabase Storage).
+// Cot `videos.file_path` bay gio chua secure_url cua Cloudinary.
 
-const TEN_BUCKET_VIDEO = 'videos';
+import {
+  taiLenCloudinary,
+  urlTaiXuongTuUrl,
+  publicIdTuUrl,
+  xoaCloudinary,
+} from '../services/cloudinary';
+
 const KICH_THUOC_VIDEO_TOI_DA = 500 * 1024 * 1024;
+const THU_MUC_VIDEO = 'ai-video-web/videos';
 
 const DINH_DANG_HOP_LE = {
   'video/mp4': 'MP4',
@@ -10,21 +18,15 @@ const DINH_DANG_HOP_LE = {
 };
 
 function suyLuanDinhDang(file) {
-  return DINH_DANG_HOP_LE[file.type] || file.name.split('.').pop()?.toUpperCase() || null;
+  return DINH_DANG_HOP_LE[file.type] || file.name?.split('.').pop()?.toUpperCase() || null;
 }
 
 function kiemTraVideo(file) {
   if (!DINH_DANG_HOP_LE[file.type]) {
-    return {
-      code: 'INVALID_VIDEO_TYPE',
-      message: 'Video must be an MP4, MOV, or WebM file.',
-    };
+    return { code: 'INVALID_VIDEO_TYPE', message: 'Video must be an MP4, MOV, or WebM file.' };
   }
   if (file.size > KICH_THUOC_VIDEO_TOI_DA) {
-    return {
-      code: 'VIDEO_TOO_LARGE',
-      message: 'Video cannot be larger than 500 MB.',
-    };
+    return { code: 'VIDEO_TOO_LARGE', message: 'Video cannot be larger than 500 MB.' };
   }
   return null;
 }
@@ -71,55 +73,45 @@ async function taiFileVideo(userId, videoId, file) {
   const loiKiemTra = kiemTraVideo(file);
   if (loiKiemTra) return { data: null, error: loiKiemTra };
 
-  const duongDan = `${userId}/${videoId}/${file.name}`;
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_VIDEO)
-    .upload(duongDan, file, {
-      cacheControl: '3600',
-      contentType: file.type,
-      upsert: true,
-    });
-
-  if (error) return { data: null, error };
   const thongTin = await layThongTinVideo(file);
+
+  const { data, error } = await taiLenCloudinary(file, {
+    resourceType: 'video',
+    folder: `${THU_MUC_VIDEO}/${userId}/${videoId}`,
+    tags: ['video', userId],
+  });
+  if (error) return { data: null, error };
+
   return {
-    data: { path: data.path, format: suyLuanDinhDang(file), ...thongTin },
+    data: {
+      path: data.url,
+      format: suyLuanDinhDang(file),
+      durationSeconds: thongTin.durationSeconds || Math.round(data.duration) || 0,
+      resolution: thongTin.resolution || uocLuongDoPhanGiai(data.height),
+      aspectRatio: thongTin.aspectRatio || rutGonTiLe(data.width, data.height),
+    },
     error: null,
   };
 }
 
-async function layUrlVideo(duongDan) {
-  if (!duongDan) return { data: { url: '' }, error: null };
-
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_VIDEO)
-    .createSignedUrl(duongDan, 3600);
-
-  if (error) return { data: { url: '' }, error };
-  return { data: { url: data.signedUrl || '' }, error: null };
+// file_path da la URL day du -> tra thang ra.
+async function layUrlVideo(filePath) {
+  return { data: { url: filePath || '' }, error: null };
 }
 
-async function layUrlTaiXuongVideo(duongDan, tenFile) {
-  if (!duongDan) return { data: { url: '' }, error: null };
-
-  const { data, error } = await supabase.storage
-    .from(TEN_BUCKET_VIDEO)
-    .createSignedUrl(duongDan, 300, { download: tenFile || true });
-
-  if (error) return { data: { url: '' }, error };
-  return { data: { url: data.signedUrl || '' }, error: null };
+async function layUrlTaiXuongVideo(filePath, tenFile) {
+  if (!filePath) return { data: { url: '' }, error: null };
+  return { data: { url: urlTaiXuongTuUrl(filePath, tenFile) }, error: null };
 }
 
-async function xoaFileVideo(duongDan) {
-  if (!duongDan) return { data: null, error: null };
-  return supabase.storage
-    .from(TEN_BUCKET_VIDEO)
-    .remove([duongDan]);
+async function xoaFileVideo(filePath) {
+  if (!filePath) return { data: null, error: null };
+  const { publicId, resourceType } = publicIdTuUrl(filePath);
+  return xoaCloudinary(publicId, resourceType);
 }
 
 export {
   KICH_THUOC_VIDEO_TOI_DA,
-  TEN_BUCKET_VIDEO,
   kiemTraVideo,
   layUrlTaiXuongVideo,
   layUrlVideo,

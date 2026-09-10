@@ -167,62 +167,70 @@ function TrangHoSo({ user, onOpenStorage }) {
             onSubmit={luuHoSo}
             aria-busy={dangTai || dangLuu}
           >
-            {dangTai && (
-              <div className="profile-loading" role="status">
-                <LoaderCircle className="profile-spinner" size={17} />
-                {t('profile.loadingProfile')}
+            {dangTai ? (
+              <div className="profile-skeleton-grid" aria-live="polite" aria-label={t('profile.loadingProfile')}>
+                {Array.from({ length: 6 }).map((_, chiSo) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <div className="profile-skeleton-field" key={chiSo} aria-hidden="true">
+                    <div className="skeleton skeleton-text" />
+                    <div className="skeleton skeleton-input" />
+                  </div>
+                ))}
               </div>
+            ) : (
+              <>
+                <div className="profile-form-grid">
+                  <label className="profile-field" htmlFor="profileFullName">
+                    <span>{t('profile.fullName')}</span>
+                    <div><UserRound size={17} /><input id="profileFullName" value={hoSo.fullName} onChange={capNhatTruong('fullName')} autoComplete="name" required /></div>
+                  </label>
+
+                  <label className="profile-field" htmlFor="profileDisplayName">
+                    <span>{t('profile.displayName')}</span>
+                    <div><Sparkles size={17} /><input id="profileDisplayName" value={hoSo.displayName} onChange={capNhatTruong('displayName')} autoComplete="nickname" /></div>
+                  </label>
+
+                  <label className="profile-field" htmlFor="profileEmail">
+                    <span>{t('common.email')}</span>
+                    <div className="readonly"><Mail size={17} /><input id="profileEmail" value={user?.email || ''} readOnly /></div>
+                    <small>{t('profile.loginEmailNote')}</small>
+                  </label>
+
+                  <label className="profile-field" htmlFor="profilePhone">
+                    <span>{t('profile.phone')}</span>
+                    <div><Phone size={17} /><input id="profilePhone" value={hoSo.phone} onChange={capNhatTruong('phone')} autoComplete="tel" placeholder={t('profile.phonePlaceholder')} /></div>
+                  </label>
+
+                  <label className="profile-field" htmlFor="profileCompany">
+                    <span>{t('profile.company')}</span>
+                    <div><Building2 size={17} /><input id="profileCompany" value={hoSo.company} onChange={capNhatTruong('company')} autoComplete="organization" placeholder={t('profile.companyPlaceholder')} /></div>
+                  </label>
+
+                  <label className="profile-field" htmlFor="profileJobTitle">
+                    <span>{t('profile.jobTitle')}</span>
+                    <div><BriefcaseBusiness size={17} /><input id="profileJobTitle" value={hoSo.jobTitle} onChange={capNhatTruong('jobTitle')} autoComplete="organization-title" placeholder={t('profile.jobTitlePlaceholder')} /></div>
+                  </label>
+                </div>
+
+                <label className="profile-field profile-bio" htmlFor="profileBio">
+                  <span>{t('profile.bio')}</span>
+                  <textarea id="profileBio" value={hoSo.bio} onChange={capNhatTruong('bio')} rows="4" maxLength="240" placeholder={t('profile.bioPlaceholder')} />
+                  <small>{t('profile.characterCount', { count: hoSo.bio.length })}</small>
+                </label>
+
+                {thongBao && <div className="profile-message success" role="status"><CheckCircle2 size={17} /> {thongBao}</div>}
+                {loi && <div className="profile-message error" role="alert"><CircleAlert size={17} /> {loi}</div>}
+
+                <div className="profile-form-actions">
+                  <span>{t('profile.dataLocation')}</span>
+                  <button type="submit" disabled={dangLuu || dangTai}>
+                    {dangLuu
+                      ? <><LoaderCircle className="profile-spinner" size={17} /> {t('profile.saving')}</>
+                      : <><Save size={17} /> {t('profile.saveChanges')}</>}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="profile-form-grid">
-              <label className="profile-field" htmlFor="profileFullName">
-                <span>{t('profile.fullName')}</span>
-                <div><UserRound size={17} /><input id="profileFullName" value={hoSo.fullName} onChange={capNhatTruong('fullName')} autoComplete="name" required /></div>
-              </label>
-
-              <label className="profile-field" htmlFor="profileDisplayName">
-                <span>{t('profile.displayName')}</span>
-                <div><Sparkles size={17} /><input id="profileDisplayName" value={hoSo.displayName} onChange={capNhatTruong('displayName')} autoComplete="nickname" /></div>
-              </label>
-
-              <label className="profile-field" htmlFor="profileEmail">
-                <span>{t('common.email')}</span>
-                <div className="readonly"><Mail size={17} /><input id="profileEmail" value={user?.email || ''} readOnly /></div>
-                <small>{t('profile.loginEmailNote')}</small>
-              </label>
-
-              <label className="profile-field" htmlFor="profilePhone">
-                <span>{t('profile.phone')}</span>
-                <div><Phone size={17} /><input id="profilePhone" value={hoSo.phone} onChange={capNhatTruong('phone')} autoComplete="tel" placeholder={t('profile.phonePlaceholder')} /></div>
-              </label>
-
-              <label className="profile-field" htmlFor="profileCompany">
-                <span>{t('profile.company')}</span>
-                <div><Building2 size={17} /><input id="profileCompany" value={hoSo.company} onChange={capNhatTruong('company')} autoComplete="organization" placeholder={t('profile.companyPlaceholder')} /></div>
-              </label>
-
-              <label className="profile-field" htmlFor="profileJobTitle">
-                <span>{t('profile.jobTitle')}</span>
-                <div><BriefcaseBusiness size={17} /><input id="profileJobTitle" value={hoSo.jobTitle} onChange={capNhatTruong('jobTitle')} autoComplete="organization-title" placeholder={t('profile.jobTitlePlaceholder')} /></div>
-              </label>
-            </div>
-
-            <label className="profile-field profile-bio" htmlFor="profileBio">
-              <span>{t('profile.bio')}</span>
-              <textarea id="profileBio" value={hoSo.bio} onChange={capNhatTruong('bio')} rows="4" maxLength="240" placeholder={t('profile.bioPlaceholder')} />
-              <small>{t('profile.characterCount', { count: hoSo.bio.length })}</small>
-            </label>
-
-            {thongBao && <div className="profile-message success" role="status"><CheckCircle2 size={17} /> {thongBao}</div>}
-            {loi && <div className="profile-message error" role="alert"><CircleAlert size={17} /> {loi}</div>}
-
-            <div className="profile-form-actions">
-              <span>{t('profile.dataLocation')}</span>
-              <button type="submit" disabled={dangLuu || dangTai}>
-                {dangLuu
-                  ? <><LoaderCircle className="profile-spinner" size={17} /> {t('profile.saving')}</>
-                  : <><Save size={17} /> {t('profile.saveChanges')}</>}
-              </button>
-            </div>
           </form>
         </section>
 

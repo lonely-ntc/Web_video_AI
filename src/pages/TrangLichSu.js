@@ -13,7 +13,6 @@ import {
   FolderOpen,
   History as HistoryIcon,
   Loader2,
-  LoaderCircle,
   MoreHorizontal,
   Play,
   RefreshCw,
@@ -357,9 +356,16 @@ function TrangLichSu({
         </div>
 
         {loading ? (
-          <div className="history-empty">
-            <LoaderCircle className="history-empty-spinner" size={27} />
-            <h3>{t('historyPage.loading')}</h3>
+          <div className="history-table" aria-live="polite" aria-label={t('historyPage.loading')}>
+            {Array.from({ length: 6 }).map((_, chiSo) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div className="history-skeleton-row" key={chiSo} aria-hidden="true">
+                <div className="history-skeleton-row-body">
+                  <div className="skeleton skeleton-text" style={{ width: '40%' }} />
+                  <div className="skeleton skeleton-text" style={{ width: '22%' }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="history-empty" role="alert">
