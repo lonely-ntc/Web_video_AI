@@ -24,3 +24,31 @@ button:focus-visible, input:focus-visible {
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 8px; background: #d1cfdd; background-clip: padding-box; }
+
+/* Chuyen dong dung chung cho cac thanh "hero" dau trang (projects-hero,
+   documents-hero, avatar-hero...): vong tron sang lan toa nhe, o icon
+   troi nhe len xuong, va anh sang luot qua nen. Dinh nghia 1 lan o day
+   (global) de moi file styles/*.css deu dung chung duoc. */
+@keyframes hero-lan-toa {
+  0%, 100% { transform: scale(1); opacity: .75; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes hero-troi-nhe {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-7px) rotate(-1deg); }
+}
+
+@keyframes hero-anh-sang-luot {
+  0% { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class$="-hero"]::before,
+  [class$="-hero"]::after,
+  [class*="-hero-mark"],
+  [class*="-hero-glow"] {
+    animation: none !important;
+  }
+}

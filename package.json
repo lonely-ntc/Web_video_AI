@@ -20,12 +20,16 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "concurrently -k -n web,tts,avatar,ppt,media -c blue,green,magenta,yellow,cyan \"npm:dev:web\" \"npm:dev:tts\" \"npm:dev:avatar\" \"npm:dev:ppt\" \"npm:dev:media\"",
+    "dev": "concurrently -k -n web,tts,avatar,ppt,media,render,gateway,tunnel -c blue,green,magenta,yellow,cyan,red,white,gray \"npm:dev:web\" \"npm:dev:tts\" \"npm:dev:avatar\" \"npm:dev:ppt\" \"npm:dev:media\" \"npm:dev:render\" \"npm:dev:gateway\" \"npm:tunnel\"",
     "dev:web": "react-scripts start",
     "dev:tts": "cd local-ai/tts-service && \"%LOCALAPPDATA%\\Programs\\Python\\Python313\\python.exe\" -m uvicorn app:app --host 127.0.0.1 --port 8001 --reload",
     "dev:avatar": "cd local-ai/avatar-service && conda run -n echomimic --no-capture-output python -m uvicorn api:app --host 127.0.0.1 --port 8002",
     "dev:ppt": "cd local-ai/ppt-service && (if not exist node_modules npm install) && npm start",
-    "dev:media": "cd local-ai/media-service && npm start"
+    "dev:media": "cd local-ai/media-service && npm start",
+    "dev:render": "cd local-ai/ffmpeg-service && (if not exist node_modules npm install) && npm start",
+    "dev:gateway": "cd local-ai/gateway-service && npm start",
+    "tunnel": "local-ai\\tools\\ngrok.exe start --all --config local-ai\\tools\\ngrok.yml",
+    "automation": "concurrently -k -n tts,avatar,ppt,media,render,gateway,tunnel -c green,magenta,yellow,cyan,red,white,gray \"npm:dev:tts\" \"npm:dev:avatar\" \"npm:dev:ppt\" \"npm:dev:media\" \"npm:dev:render\" \"npm:dev:gateway\" \"npm:tunnel\""
   },
   "eslintConfig": {
     "extends": [

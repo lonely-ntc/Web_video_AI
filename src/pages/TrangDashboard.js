@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  Clock3,
   Download,
   Eye,
   FileText,
@@ -57,6 +56,31 @@ import TrangTaoVideoAI from './TrangTaoVideoAI';
 import TrangVideo from './TrangVideo';
 import '../App.css';
 
+// Chua co he thong goi cuoc rieng -> tam thoi coi 1 tai khoan duoc 5GB de
+// tinh % dung luong da dung tren donut. Sua o day khi co bang goi cuoc that.
+const TONG_DUNG_LUONG_GOI_BYTES = 5 * 1024 ** 3;
+
+function dinhDangDungLuong(bytes) {
+  if (!bytes) return '0 GB';
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+function dinhDangThoiLuong(giay) {
+  if (!giay) return '—';
+  const phut = Math.floor(giay / 60);
+  const giayConLai = Math.round(giay % 60);
+  return `${phut}:${String(giayConLai).padStart(2, '0')}`;
+}
+
+function dinhDangNgay(ngay, locale) {
+  if (!ngay) return '—';
+  const giaTri = new Date(ngay);
+  if (Number.isNaN(giaTri.getTime())) return '—';
+  return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(giaTri);
+}
+
 const navigationItems = [
   { id: 'Dashboard', labelKey: 'navigation.dashboard', icon: LayoutDashboard },
   { id: 'Projects', labelKey: 'navigation.projects', icon: FolderKanban },
@@ -71,50 +95,9 @@ const accountItems = [
   { id: 'Settings', labelKey: 'navigation.settings', icon: Settings },
 ];
 
-const stats = [
-  {
-    labelKey: 'dashboard.stats.projects',
-    value: '0',
-    detailKey: 'dashboard.stats.projectsDetail',
-    icon: FolderKanban,
-    tone: 'purple',
-  },
-  {
-    labelKey: 'dashboard.stats.videos',
-    value: '0',
-    detailKey: 'dashboard.stats.videosDetail',
-    icon: Video,
-    tone: 'blue',
-  },
-  {
-    labelKey: 'dashboard.stats.documents',
-    value: '0',
-    detailKey: 'dashboard.stats.documentsDetail',
-    icon: FileText,
-    tone: 'orange',
-  },
-  {
-    labelKey: 'dashboard.stats.avatars',
-    value: '0',
-    detailKey: 'dashboard.stats.avatarsDetail',
-    icon: UserRound,
-    tone: 'pink',
-  },
-  {
-    labelKey: 'dashboard.stats.used',
-    value: '0 GB',
-    detailKey: 'dashboard.stats.usedDetail',
-    icon: HardDrive,
-    tone: 'green',
-  },
-  {
-    labelKey: 'dashboard.stats.processing',
-    value: '0',
-    detailKey: 'dashboard.stats.processingDetail',
-    icon: Activity,
-    tone: 'indigo',
-  },
-];
+// Cac card thong ke, tien trinh, danh sach gan day, va dung luong luu tru
+// deu duoc TINH TU DU LIEU THAT trong component (xem cac useMemo o duoi),
+// khong con la mang tinh (mock) nhu truoc.
 
 const quickActions = [
   {
@@ -168,20 +151,10 @@ const quickActions = [
   },
 ];
 
-const processingVideos = [];
-
-const recentItems = [];
-
+// Chua co nguon du lieu that cho thong bao he thong / lich su hoat dong rieng
+// tren dashboard -> de trong, tranh hien mock. Se noi voi bang that sau.
 const notifications = [];
-
 const activities = [];
-
-const storageItems = [
-  { labelKey: 'dashboard.storage.documents', value: '0 GB', percent: 0, color: '#725cf6' },
-  { labelKey: 'dashboard.storage.images', value: '0 GB', percent: 0, color: '#f27ca6' },
-  { labelKey: 'dashboard.storage.audio', value: '0 GB', percent: 0, color: '#f4a261' },
-  { labelKey: 'dashboard.storage.video', value: '0 GB', percent: 0, color: '#2e8cff' },
-];
 
 function Sidebar({
   activeMenu,
@@ -390,7 +363,7 @@ function StatCard({ stat }) {
       <div className="stat-content">
         <span>{t(stat.labelKey)}</span>
         <strong>{stat.value}</strong>
-        <small>{t(stat.detailKey)}</small>
+        <small>{stat.detail ?? t(stat.detailKey)}</small>
       </div>
     </article>
   );
@@ -515,15 +488,155 @@ function TrangDashboard({
     }
   }, [activeMenu, user]);
 
+  const thongKeKho = useMemo(() => {
+    const taiLieuBytes = danhSachTaiLieu.reduce((tong, tl) => tong + (tl.sizeBytes || 0), 0);
+    const anhBytes = danhSachAvatar.reduce((tong, av) => tong + (av.sizeBytes || 0), 0);
+    const videoBytes = danhSachVideo.reduce((tong, vd) => tong + (vd.sizeBytes || 0), 0);
+    // Am thanh giong doc chua co danh sach tong hop rieng o cap dashboard
+    // (chi truy van theo tung chuong) -> tam thoi khong tinh vao day.
+    const tongDaDung = taiLieuBytes + anhBytes + videoBytes;
+    const tyLe = (bytes) => (tongDaDung > 0 ? Math.round((bytes / tongDaDung) * 100) : 0);
+
+    // Ty le tren tong dung luong GOI (khong phai tren tong DA DUNG) de ve
+    // dung vong tron conic-gradient: tong cac doan mau = % da dung cua goi.
+    const pctGoi = (bytes) => (bytes / TONG_DUNG_LUONG_GOI_BYTES) * 100;
+    const mocDoc = pctGoi(taiLieuBytes);
+    const mocAnh = mocDoc + pctGoi(anhBytes);
+    const mocAmThanh = mocAnh; // chua co du lieu am thanh tong hop
+    const mocVideo = mocAmThanh + pctGoi(videoBytes);
+    const conicGradient = `conic-gradient(#725cf6 0 ${mocDoc}%, #f27ca6 ${mocDoc}% ${mocAnh}%, `
+      + `#f4a261 ${mocAnh}% ${mocAmThanh}%, #2e8cff ${mocAmThanh}% ${mocVideo}%, #eef0f5 ${mocVideo}% 100%)`;
+
+    return {
+      tongDaDung,
+      phanTramGoi: Math.min(100, Math.round((tongDaDung / TONG_DUNG_LUONG_GOI_BYTES) * 100)),
+      conicGradient,
+      items: [
+        { labelKey: 'dashboard.storage.documents', value: dinhDangDungLuong(taiLieuBytes), percent: tyLe(taiLieuBytes), color: '#725cf6' },
+        { labelKey: 'dashboard.storage.images', value: dinhDangDungLuong(anhBytes), percent: tyLe(anhBytes), color: '#f27ca6' },
+        { labelKey: 'dashboard.storage.audio', value: '0 KB', percent: 0, color: '#f4a261' },
+        { labelKey: 'dashboard.storage.video', value: dinhDangDungLuong(videoBytes), percent: tyLe(videoBytes), color: '#2e8cff' },
+      ],
+    };
+  }, [danhSachTaiLieu, danhSachAvatar, danhSachVideo]);
+
+  const stats = useMemo(() => {
+    const soVideoDangXuLy = danhSachVideo.filter((video) => video.status === 'rendering').length;
+    return [
+      {
+        labelKey: 'dashboard.stats.projects',
+        value: String(danhSachDuAn.length),
+        detailKey: 'dashboard.stats.projectsDetail',
+        detail: danhSachDuAn.length > 0 ? t('dashboard.stats.projectsActive', { count: danhSachDuAn.length }) : undefined,
+        icon: FolderKanban,
+        tone: 'purple',
+      },
+      {
+        labelKey: 'dashboard.stats.videos',
+        value: String(danhSachVideo.length),
+        detailKey: 'dashboard.stats.videosDetail',
+        detail: danhSachVideo.length > 0 ? t('dashboard.stats.videosActive', { count: danhSachVideo.length }) : undefined,
+        icon: Video,
+        tone: 'blue',
+      },
+      {
+        labelKey: 'dashboard.stats.documents',
+        value: String(danhSachTaiLieu.length),
+        detailKey: 'dashboard.stats.documentsDetail',
+        detail: danhSachTaiLieu.length > 0 ? t('dashboard.stats.documentsActive', { count: danhSachTaiLieu.length }) : undefined,
+        icon: FileText,
+        tone: 'orange',
+      },
+      {
+        labelKey: 'dashboard.stats.avatars',
+        value: String(danhSachAvatar.length),
+        detailKey: 'dashboard.stats.avatarsDetail',
+        detail: danhSachAvatar.length > 0 ? t('dashboard.stats.avatarsActive', { count: danhSachAvatar.length }) : undefined,
+        icon: UserRound,
+        tone: 'pink',
+      },
+      {
+        labelKey: 'dashboard.stats.used',
+        value: dinhDangDungLuong(thongKeKho.tongDaDung),
+        detailKey: 'dashboard.stats.usedDetail',
+        detail: thongKeKho.tongDaDung > 0 ? t('dashboard.stats.usedActive', { percent: thongKeKho.phanTramGoi }) : undefined,
+        icon: HardDrive,
+        tone: 'green',
+      },
+      {
+        labelKey: 'dashboard.stats.processing',
+        value: String(soVideoDangXuLy),
+        detailKey: 'dashboard.stats.processingDetail',
+        detail: soVideoDangXuLy > 0 ? t('dashboard.stats.processingActive', { count: soVideoDangXuLy }) : undefined,
+        icon: Activity,
+        tone: 'indigo',
+      },
+    ];
+  }, [danhSachDuAn, danhSachVideo, danhSachTaiLieu, danhSachAvatar, thongKeKho, t]);
+
+  const dsDangXuLy = useMemo(() => (
+    danhSachVideo
+      .filter((video) => video.status === 'rendering')
+      .map((video) => ({
+        id: video.id,
+        projectName: danhSachDuAn.find((duAn) => duAn.id === video.projectId)?.name || '—',
+        videoName: video.name,
+        progress: 50,
+        color: '#7762f4',
+        statusLabel: t('dashboard.recent.processing'),
+      }))
+  ), [danhSachVideo, danhSachDuAn, t]);
+
+  const dsGanDay = useMemo(() => {
+    const NHAN_TRANG_THAI = {
+      completed: { labelKey: 'dashboard.recent.completed', tone: 'success' },
+      rendering: { labelKey: 'dashboard.recent.processing', tone: 'processing' },
+      failed: { labelKey: 'dashboard.recent.failed', tone: 'draft' },
+    };
+
+    const tuVideo = danhSachVideo.map((video) => {
+      const trangThai = NHAN_TRANG_THAI[video.status] || NHAN_TRANG_THAI.rendering;
+      return {
+        id: `video-${video.id}`,
+        projectName: danhSachDuAn.find((duAn) => duAn.id === video.projectId)?.name || '—',
+        videoName: video.name,
+        createdAt: video.updatedAt || video.createdAt,
+        statusLabel: t(trangThai.labelKey),
+        tone: trangThai.tone,
+        duration: dinhDangThoiLuong(video.duration),
+        completed: video.status === 'completed',
+        projectId: video.projectId,
+      };
+    });
+
+    const duAnChuaCoVideo = danhSachDuAn
+      .filter((duAn) => !danhSachVideo.some((video) => video.projectId === duAn.id))
+      .map((duAn) => ({
+        id: `project-${duAn.id}`,
+        projectName: duAn.name,
+        videoName: t('dashboard.recent.noVideoYet'),
+        createdAt: duAn.updatedAt || duAn.createdAt,
+        statusLabel: t('dashboard.recent.draft'),
+        tone: 'draft',
+        duration: '—',
+        completed: false,
+        projectId: duAn.id,
+      }));
+
+    return [...tuVideo, ...duAnChuaCoVideo]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 8);
+  }, [danhSachVideo, danhSachDuAn, t]);
+
   const filteredRecentItems = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase(language);
-    if (!query) return recentItems;
-    return recentItems.filter((item) =>
-      `${t(item.projectKey)} ${t(item.videoKey)} ${t(item.statusKey)}`
+    if (!query) return dsGanDay;
+    return dsGanDay.filter((item) =>
+      `${item.projectName} ${item.videoName} ${item.statusLabel}`
         .toLocaleLowerCase(language)
         .includes(query)
     );
-  }, [language, searchQuery, t]);
+  }, [dsGanDay, language, searchQuery]);
 
   const showToast = (message, loai = 'success') => {
     setToast(message);
@@ -540,6 +653,10 @@ function TrangDashboard({
       setActiveMenu('CreateProject');
       return;
     }
+    if (action.id === 'createVideo') {
+      setActiveMenu('Projects');
+      return;
+    }
     if (action.accept && fileInputRef.current) {
       fileInputRef.current.accept = action.accept;
       fileInputRef.current.dataset.action = action.id;
@@ -549,10 +666,30 @@ function TrangDashboard({
     showToast(t('dashboard.readyToStart', { action: t(action.labelKey) }));
   };
 
-  const handleFileSelected = (event) => {
+  const handleFileSelected = async (event) => {
     const file = event.target.files?.[0];
-    if (file) showToast(t('dashboard.fileSelected', { file: file.name }));
+    const hanhDong = event.target.dataset.action;
     event.target.value = '';
+    if (!file) return;
+
+    const taiLenTheoHanhDong = {
+      uploadPdf: taiLenTaiLieu,
+      uploadWord: taiLenTaiLieu,
+      uploadPowerPoint: taiLenTaiLieu,
+      uploadAvatar: taiLenAvatar,
+    };
+    const taiLen = taiLenTheoHanhDong[hanhDong];
+    if (!taiLen) {
+      showToast(t('dashboard.fileSelected', { file: file.name }));
+      return;
+    }
+
+    const { error } = await taiLen(file);
+    if (error) {
+      showToast(error.message || t('dashboard.uploadFailed'), 'error');
+      return;
+    }
+    showToast(t('dashboard.fileUploaded', { file: file.name }));
   };
 
   const handleSidebarToggle = () => {
@@ -677,6 +814,8 @@ function TrangDashboard({
             avatars={danhSachAvatar}
             onBack={() => setActiveMenu('ChapterDetail')}
             onSaveVoiceConfig={chonVoice}
+            onSelectAvatar={chonAvatar}
+            onUploadAvatar={(file) => taiLenAvatar(file, projectDangMo.id)}
           />
         ) : activeMenu === 'CreateProject' && user ? (
           <TrangTaoDuAn
@@ -833,21 +972,21 @@ function TrangDashboard({
                   action={t('common.viewAll')}
                 />
                 <div className="processing-list">
-                  {processingVideos.map((item) => (
-                    <article className="processing-item" key={item.videoKey}>
+                  {dsDangXuLy.map((item) => (
+                    <article className="processing-item" key={item.id}>
                       <div className="processing-thumbnail">
                         <Video size={21} />
                         <span>{item.progress}%</span>
                       </div>
                       <div className="processing-info">
                         <div className="processing-title">
-                          <div><span>{t(item.projectKey)}</span><strong>{t(item.videoKey)}</strong></div>
+                          <div><span>{item.projectName}</span><strong>{item.videoName}</strong></div>
                           <strong style={{ color: item.color }}>{item.progress}%</strong>
                         </div>
                         <div
                           className="progress-track"
                           role="progressbar"
-                          aria-label={t('dashboard.progress.progressLabel', { video: t(item.videoKey) })}
+                          aria-label={t('dashboard.progress.progressLabel', { video: item.videoName })}
                           aria-valuenow={item.progress}
                           aria-valuemin="0"
                           aria-valuemax="100"
@@ -855,14 +994,13 @@ function TrangDashboard({
                           <span style={{ width: `${item.progress}%`, backgroundColor: item.color }} />
                         </div>
                         <div className="processing-meta">
-                          <span><Activity size={14} /> {t(item.statusKey)}</span>
-                          <span><Clock3 size={14} /> {t(item.startedKey)}</span>
+                          <span><Activity size={14} /> {item.statusLabel}</span>
                         </div>
                       </div>
                       <button className="icon-button"><MoreHorizontal size={19} /><span className="sr-only">{t('dashboard.progress.options')}</span></button>
                     </article>
                   ))}
-                  {processingVideos.length === 0 && (
+                  {dsDangXuLy.length === 0 && (
                     <div className="empty-state compact">
                       <span className="empty-state-icon"><Video size={20} /></span>
                       <h3>{t('dashboard.progress.emptyTitle')}</h3>
@@ -885,21 +1023,21 @@ function TrangDashboard({
                     <thead><tr><th>{t('dashboard.recent.projectVideo')}</th><th>{t('dashboard.recent.createdAt')}</th><th>{t('dashboard.recent.status')}</th><th>{t('dashboard.recent.duration')}</th><th><span className="sr-only">{t('dashboard.recent.actions')}</span></th></tr></thead>
                     <tbody>
                       {filteredRecentItems.map((item) => (
-                        <tr key={item.videoKey}>
+                        <tr key={item.id}>
                           <td>
                             <div className="project-cell">
                               <span className="project-icon"><Play size={15} fill="currentColor" /></span>
-                              <span><strong>{t(item.videoKey)}</strong><small>{t(item.projectKey)}</small></span>
+                              <span><strong>{item.videoName}</strong><small>{item.projectName}</small></span>
                             </div>
                           </td>
-                          <td data-label={t('dashboard.recent.time')}>{item.createdKey ? t(item.createdKey) : item.created}</td>
-                          <td data-label={t('dashboard.recent.status')}><span className={`status-badge ${item.tone}`}>{t(item.statusKey)}</span></td>
+                          <td data-label={t('dashboard.recent.time')}>{dinhDangNgay(item.createdAt, language)}</td>
+                          <td data-label={t('dashboard.recent.status')}><span className={`status-badge ${item.tone}`}>{item.statusLabel}</span></td>
                           <td data-label={t('dashboard.recent.duration')}>{item.duration}</td>
                           <td>
                             <div className="table-actions">
-                              <button title={t('dashboard.recent.openProject')}><FolderOpen size={17} /></button>
-                              <button title={t('dashboard.recent.viewVideo')} disabled={!item.completed}><Eye size={17} /></button>
-                              <button title={t('dashboard.recent.downloadVideo')} disabled={!item.completed}><Download size={17} /></button>
+                              <button title={t('dashboard.recent.openProject')} onClick={() => handleOpenProject(item.projectId)}><FolderOpen size={17} /></button>
+                              <button title={t('dashboard.recent.viewVideo')} disabled={!item.completed} onClick={() => setActiveMenu('Videos')}><Eye size={17} /></button>
+                              <button title={t('dashboard.recent.downloadVideo')} disabled={!item.completed} onClick={() => setActiveMenu('Videos')}><Download size={17} /></button>
                             </div>
                           </td>
                         </tr>
@@ -921,16 +1059,19 @@ function TrangDashboard({
               <section className="panel storage-panel">
                 <SectionHeader title={t('dashboard.storage.title')} action={t('common.manage')} />
                 <div className="storage-summary">
-                  <div className="storage-donut empty">
-                    <div><strong>0</strong><span>{t('dashboard.storage.used')}</span></div>
+                  <div
+                    className={`storage-donut ${thongKeKho.tongDaDung > 0 ? '' : 'empty'}`}
+                    style={thongKeKho.tongDaDung > 0 ? { background: thongKeKho.conicGradient } : undefined}
+                  >
+                    <div><strong>{thongKeKho.phanTramGoi}%</strong><span>{t('dashboard.storage.used')}</span></div>
                   </div>
                   <div className="storage-numbers">
-                    <span><small>{t('dashboard.storage.total')}</small><strong>0 GB</strong></span>
-                    <span><small>{t('dashboard.storage.remaining')}</small><strong>0 GB</strong></span>
+                    <span><small>{t('dashboard.storage.total')}</small><strong>{dinhDangDungLuong(TONG_DUNG_LUONG_GOI_BYTES)}</strong></span>
+                    <span><small>{t('dashboard.storage.remaining')}</small><strong>{dinhDangDungLuong(Math.max(0, TONG_DUNG_LUONG_GOI_BYTES - thongKeKho.tongDaDung))}</strong></span>
                   </div>
                 </div>
                 <div className="storage-list">
-                  {storageItems.map((item) => (
+                  {thongKeKho.items.map((item) => (
                     <div className="storage-row" key={item.labelKey}>
                       <span className="storage-color" style={{ backgroundColor: item.color }} />
                       <span className="storage-label">{t(item.labelKey)}</span>

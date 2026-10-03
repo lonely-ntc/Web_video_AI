@@ -72,11 +72,11 @@ function useKichBan(user, projectId, chapterId) {
     return { data, error: null };
   }, [chapterId, projectId, t, user]);
 
-  const taoTuAI = useCallback(async () => {
+  const taoTuAI = useCallback(async (documentIds) => {
     if (!chapterId) return { data: null, error: { code: 'LOGIN_REQUIRED' } };
     setDangTaoBangAI(true);
     setLoiKichBan('');
-    const { data, error } = await taoKichBanBangAI(chapterId);
+    const { data, error } = await taoKichBanBangAI(chapterId, documentIds);
     setDangTaoBangAI(false);
     if (error) {
       setLoiKichBan(error.message || dichLoiKichBan(error, t));

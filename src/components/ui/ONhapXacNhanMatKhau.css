@@ -1,8 +1,8 @@
 /* Thiet ke o nhap xac nhan mat khau va cac o nhap co nhan noi. */
 .auth-floating-field { position: relative; width: 100%; font-family: 'Segoe UI', sans-serif; }
-.auth-floating-field input { width: 100%; height: 52px; padding: 0 17px; border: 2px solid #d7d8e2; border-radius: 20px; outline: 0; color: #303244; background: transparent; font: inherit; font-size: 12px; transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease; }
+.auth-floating-field input { width: 100%; height: 52px; padding: 0 17px; border: 2px solid #d7d8e2; border-radius: 20px; outline: 0; color: #303244; background: transparent; font: inherit; font-size: 1.24rem; transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease; }
 .auth-floating-field.has-action input { padding-right: 50px; }
-.auth-floating-field label { position: absolute; top: 50%; left: 0; z-index: 1; margin-left: 8px; padding: 0 9px; color: #696d7e; background: transparent; font-size: 12px; pointer-events: none; transform: translateY(-50%); transform-origin: left center; transition: all .3s ease; }
+.auth-floating-field label { position: absolute; top: 50%; left: 0; z-index: 1; margin-left: 8px; padding: 0 9px; color: #696d7e; background: transparent; font-size: 1.24rem; pointer-events: none; transform: translateY(-50%); transform-origin: left center; transition: all .3s ease; }
 .auth-floating-field input:focus,
 .auth-floating-field input:not(:placeholder-shown) { border-color: #9696c8; background: white; }
 .auth-floating-field input:focus { border-color: #8d7aea; box-shadow: 0 0 0 3px rgba(111, 90, 242, .1); }

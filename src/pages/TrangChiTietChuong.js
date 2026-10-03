@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
-  Bot,
   ChevronDown,
   ChevronUp,
   CircleAlert,
@@ -113,7 +112,7 @@ function TrangChiTietChuong({
   } = useChuongWorkspace(user, project.id, chuong.id);
 
   const {
-    danhSachKichBan, kichBanMoiNhat, dangTaiKichBan, loiKichBan, dangTaoBangAI, taoTuAI, xoaPhienBan,
+    danhSachKichBan, kichBanMoiNhat, dangTaiKichBan, loiKichBan, xoaPhienBan,
   } = useKichBan(user, project.id, chuong.id);
 
   const [dangChonAvatar, setDangChonAvatar] = useState(false);
@@ -123,8 +122,13 @@ function TrangChiTietChuong({
   const [dangDoiTenTaiLieu, setDangDoiTenTaiLieu] = useState(false);
   const [loiDoiTenTaiLieu, setLoiDoiTenTaiLieu] = useState('');
   const [hienLichSuKichBan, setHienLichSuKichBan] = useState(false);
+  const [anhAvatarLoi, setAnhAvatarLoi] = useState(false);
 
   const avatarDaChon = avatars.find((avatar) => avatar.id === chuong.selectedAvatarId) || null;
+
+  useEffect(() => {
+    setAnhAvatarLoi(false);
+  }, [avatarDaChon?.fileUrl]);
 
   const doiAvatar = async (event) => {
     setDangChonAvatar(true);
@@ -259,15 +263,6 @@ function TrangChiTietChuong({
           title={t('chapterDetailPage.steps.script')}
           action={(
             <div className="chapter-script-actions">
-              <button
-                type="button"
-                className="chapter-inline-upload"
-                disabled={dangTaoBangAI}
-                onClick={taoTuAI}
-              >
-                {dangTaoBangAI ? <LoaderCircle size={13} className="chapter-spin" /> : <Bot size={13} />}
-                {t('chapterDetailPage.steps.generateWithAI')}
-              </button>
               {danhSachKichBan.length > 1 && (
                 <button
                   type="button"
@@ -334,7 +329,11 @@ function TrangChiTietChuong({
           <div className="chapter-selected-row">
             {avatarDaChon ? (
               <div className="chapter-selected-preview">
-                {avatarDaChon.fileUrl ? <img src={avatarDaChon.fileUrl} alt={avatarDaChon.name} /> : <span className="chapter-avatar-placeholder"><UserRound size={16} /></span>}
+                {avatarDaChon.fileUrl && !anhAvatarLoi ? (
+                  <img src={avatarDaChon.fileUrl} alt={avatarDaChon.name} onError={() => setAnhAvatarLoi(true)} />
+                ) : (
+                  <span className="chapter-avatar-placeholder"><UserRound size={16} /></span>
+                )}
                 <strong>{avatarDaChon.name}</strong>
               </div>
             ) : (

@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
-  Bot,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -13,6 +12,7 @@ import {
   Pause,
   Play,
   Sparkles,
+  UploadCloud,
   UserRound,
   Venus,
   Video as VideoIcon,
@@ -22,6 +22,11 @@ import { useNgonNgu } from '../contexts/NgonNguContext';
 import useChuongWorkspace from '../flows/useChuongWorkspace';
 import useKichBan from '../flows/useKichBan';
 import useTtsGiongDoc from '../flows/useTtsGiongDoc';
+import useRealtimeLamMoi from '../flows/useRealtimeLamMoi';
+import {
+  capNhatVideoJob, layUrlPptx, layVideoJob, taoVideoJob,
+} from '../database/videoJob';
+import { goiWebhookTaoVideo } from '../services/makeWebhook';
 import '../styles/tao-video-ai.css';
 
 const VUNG_MIEN = [
@@ -44,14 +49,14 @@ const TEMPLATE_VIDEO = [
   { id: 'training', labelKey: 'createProjectPage.templates.training' },
 ];
 
+// stage khop cot video_jobs.stage; 'prepare' chi ton tai o web (chua co job).
 const CAC_BUOC_RENDER = [
-  'videoGeneratorPage.progress.prepare',
-  'videoGeneratorPage.progress.analyzeDocuments',
-  'videoGeneratorPage.progress.generateScript',
-  'videoGeneratorPage.progress.generateVoice',
-  'videoGeneratorPage.progress.animateAvatar',
-  'videoGeneratorPage.progress.mergeVideo',
-  'videoGeneratorPage.progress.saveResult',
+  { stage: 'prepare', labelKey: 'videoGeneratorPage.progress.prepare' },
+  { stage: 'script', labelKey: 'videoGeneratorPage.progress.generateScript' },
+  { stage: 'voice', labelKey: 'videoGeneratorPage.progress.generateVoice' },
+  { stage: 'avatar', labelKey: 'videoGeneratorPage.progress.animateAvatar' },
+  { stage: 'merge', labelKey: 'videoGeneratorPage.progress.mergeVideo' },
+  { stage: 'save', labelKey: 'videoGeneratorPage.progress.saveResult' },
 ];
 
 function uocLuongThoiLuong(script) {
@@ -126,16 +131,19 @@ function TrangTaoVideoAI({
   avatars = [],
   onBack,
   onSaveVoiceConfig,
+  onSelectAvatar,
+  onUploadAvatar,
 }) {
   const { t } = useNgonNgu();
-  const { danhSachTaiLieu, dangTaiTaiLieu } = useChuongWorkspace(user, project.id, chuong.id);
   const {
-    kichBanMoiNhat, dangTaiKichBan, dangTaoBangAI, loiKichBan, taoTuAI,
+    danhSachTaiLieu, dangTaiTaiLieu, uploadTaiLieu, dangUploadTaiLieu,
+  } = useChuongWorkspace(user, project.id, chuong.id);
+  const {
+    kichBanMoiNhat,
   } = useKichBan(user, project.id, chuong.id);
   const {
     danhSachGiong, dangTaiGiong, loiTaiGiong,
     dangTaoAudio, loiTaoAudio, audioUrl, taoAmThanhThuNghiem,
-    amThanhDaXacNhan, dangTaiAmThanhDaXacNhan, dangXacNhanGiong, loiXacNhanGiong, xacNhanGiong,
   } = useTtsGiongDoc(user, project.id, chuong.id);
 
   const [buoc, setBuoc] = useState('content');
@@ -152,15 +160,31 @@ function TrangTaoVideoAI({
   const [hienPhuDe, setHienPhuDe] = useState(true);
   const [dungNhacNen, setDungNhacNen] = useState(false);
 
-  const [buocRenderHienTai, setBuocRenderHienTai] = useState(0);
-  const [phanTramRender, setPhanTramRender] = useState(0);
-  const boDemRef = useRef(null);
+  const [job, setJob] = useState(null);
+  const [loiRender, setLoiRender] = useState('');
+  const [ketQuaKichBan, setKetQuaKichBan] = useState(null);
+  const [dangTaiPptx, setDangTaiPptx] = useState(false);
+
+  const [dangChonAvatar, setDangChonAvatar] = useState(false);
+  const [dangUploadAvatar, setDangUploadAvatar] = useState(false);
+  const inputTaiLieuRef = useRef(null);
+  const inputAvatarRef = useRef(null);
 
   const avatarDaChon = avatars.find((avatar) => avatar.id === chuong.selectedAvatarId) || null;
-  const coTaiLieu = danhSachTaiLieu.length > 0;
+  const [taiLieuDaChon, setTaiLieuDaChon] = useState([]);
+  const taiLieuHopLe = taiLieuDaChon.filter((id) => danhSachTaiLieu.some((tl) => tl.id === id));
+  const coTaiLieu = taiLieuHopLe.length > 0;
+  const chonTaiLieu = (id) => setTaiLieuDaChon((hienTai) => (
+    hienTai.includes(id) ? hienTai.filter((x) => x !== id) : [...hienTai, id]
+  ));
   const noiDungKichBan = kichBanMoiNhat?.content || chuong.script || '';
   const coKichBan = Boolean(noiDungKichBan.trim());
   const coAvatar = Boolean(avatarDaChon);
+
+  const [anhAvatarLoi, setAnhAvatarLoi] = useState(false);
+  useEffect(() => {
+    setAnhAvatarLoi(false);
+  }, [avatarDaChon?.fileUrl]);
   const duDieuKienCoBan = coTaiLieu && coAvatar;
   const thoiLuongDuKien = useMemo(() => uocLuongThoiLuong(noiDungKichBan), [noiDungKichBan]);
 
@@ -168,9 +192,45 @@ function TrangTaoVideoAI({
     giong.gender === gioiTinhGiong && (vungMien === 'all' || giong.region === vungMien)
   )), [danhSachGiong, gioiTinhGiong, vungMien]);
   const giongDaChon = giongDaLoc.find((giong) => giong.id === giongId) || null;
-  const giongDaXacNhanKhopHienTai = Boolean(amThanhDaXacNhan) && amThanhDaXacNhan.voiceId === giongId;
 
-  useEffect(() => () => clearInterval(boDemRef.current), []);
+  const jobId = job?.id;
+  const trangThaiJob = job?.status;
+  const lamMoiJob = useCallback(async () => {
+    if (!jobId) return;
+    const { data } = await layVideoJob(jobId);
+    if (data) setJob(data);
+  }, [jobId]);
+
+  useRealtimeLamMoi('video_jobs', jobId ? `id=eq.${jobId}` : null, lamMoiJob);
+
+  useEffect(() => {
+    if (buoc !== 'progress' || !jobId || trangThaiJob !== 'running') return undefined;
+    const timerId = setInterval(lamMoiJob, 5000);
+    return () => clearInterval(timerId);
+  }, [buoc, jobId, trangThaiJob, lamMoiJob]);
+
+  useEffect(() => {
+    if (buoc !== 'progress' || trangThaiJob !== 'completed') return undefined;
+    const timerId = setTimeout(() => setBuoc('result'), 600);
+    return () => clearTimeout(timerId);
+  }, [buoc, trangThaiJob]);
+
+  // Make (qua generate-script) tu ghi kich ban moi vao bang scripts sau khi
+  // xong buoc 'script'; kichBanMoiNhat tu cap nhat qua Realtime (useKichBan),
+  // chi hien len khi job da qua buoc do de tranh hien nham kich ban cu.
+  useEffect(() => {
+    if (buoc !== 'progress' || !job || job.stage === 'script' || !kichBanMoiNhat) return;
+    setKetQuaKichBan((hienTai) => (hienTai?.id === kichBanMoiNhat.id ? hienTai : kichBanMoiNhat));
+  }, [buoc, job, kichBanMoiNhat]);
+
+  const thongDiepLoiRender = loiRender
+    || (trangThaiJob === 'failed' ? job.errorMessage || t('videoGeneratorPage.progress.failed') : '');
+  const chiSoBuocRender = !job
+    ? 0
+    : trangThaiJob === 'completed'
+      ? CAC_BUOC_RENDER.length
+      : Math.max(0, CAC_BUOC_RENDER.findIndex((muc) => muc.stage === job.stage));
+  const phanTramRender = Math.round((chiSoBuocRender / CAC_BUOC_RENDER.length) * 100);
 
   useEffect(() => {
     if (giongDaLoc.length === 0) {
@@ -185,49 +245,96 @@ function TrangTaoVideoAI({
   const luuVaTiepTuc = async (bufoKeTiep) => {
     if (bufoKeTiep === 'confirm' && onSaveVoiceConfig) {
       setDangLuuGiong(true);
-      const cauHinhGiong = `VieNeu-TTS:${amThanhDaXacNhan?.voiceName || giongId}`;
+      const cauHinhGiong = `VieNeu-TTS:${giongDaChon?.name || giongId}`;
       await onSaveVoiceConfig(chuong.id, cauHinhGiong);
       setDangLuuGiong(false);
     }
     setBuoc(bufoKeTiep);
   };
 
+  const xuLyUploadTaiLieuContent = (event) => {
+    Array.from(event.target.files || []).forEach((file) => uploadTaiLieu(file));
+    event.target.value = '';
+  };
+
+  const doiAvatarContent = async (event) => {
+    setDangChonAvatar(true);
+    await onSelectAvatar?.(chuong.id, event.target.value);
+    setDangChonAvatar(false);
+  };
+
+  const xuLyUploadAvatarContent = async (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    if (!files.length || !onUploadAvatar) return;
+    setDangUploadAvatar(true);
+    await Promise.all(files.map((file) => onUploadAvatar(file)));
+    setDangUploadAvatar(false);
+  };
+
   const ngheThu = () => {
-    const doanMau = noiDungKichBan.trim().split(/\s+/).slice(0, 60).join(' ');
+    const doanMau = coKichBan
+      ? noiDungKichBan.trim().split(/\s+/).slice(0, 60).join(' ')
+      : t('videoGeneratorPage.voice.sampleText');
     taoAmThanhThuNghiem(doanMau, giongId);
   };
 
-  const xacNhan = () => {
-    if (!giongDaChon) return;
-    xacNhanGiong(noiDungKichBan, {
-      voiceId: giongDaChon.id,
-      voiceName: giongDaChon.name,
-      gender: giongDaChon.gender,
-      region: giongDaChon.region,
-    });
+  const baoLoiRender = async (id, thongDiep) => {
+    setLoiRender(thongDiep);
+    await capNhatVideoJob(id, { status: 'failed', error_message: thongDiep });
   };
 
-  const batDauRender = () => {
+  const batDauRender = async () => {
     setBuoc('progress');
-    setBuocRenderHienTai(0);
-    setPhanTramRender(0);
+    setJob(null);
+    setLoiRender('');
+    setKetQuaKichBan(null);
 
-    let buocHienTai = 0;
-    boDemRef.current = setInterval(() => {
-      setPhanTramRender((hienTai) => {
-        const tiLeMoiBuoc = 100 / CAC_BUOC_RENDER.length;
-        const muc = Math.min(100, hienTai + 4);
-        if (muc >= tiLeMoiBuoc * (buocHienTai + 1)) {
-          buocHienTai = Math.min(CAC_BUOC_RENDER.length - 1, buocHienTai + 1);
-          setBuocRenderHienTai(buocHienTai);
-        }
-        if (muc >= 100) {
-          clearInterval(boDemRef.current);
-          setTimeout(() => setBuoc('result'), 500);
-        }
-        return muc;
-      });
-    }, 220);
+    const { data: jobMoi, error: loiJob } = await taoVideoJob(user, chuong.id);
+    if (loiJob) {
+      setLoiRender(loiJob.message || t('videoGeneratorPage.progress.failed'));
+      return;
+    }
+    setJob(jobMoi);
+
+    // Khong tu tao kich ban o web nua - Make se goi generate-script (doc tai
+    // lieu + Ollama) ngay khi nhan webhook, roi tu chay tiep TTS/avatar/render
+    // mot mach. Kich ban moi se tu hien len (xem effect Realtime o tren) khi
+    // Make cap nhat xong buoc 'script'.
+    const { error: loiWebhook } = await goiWebhookTaoVideo({
+      jobId: jobMoi.id,
+      userId: user?.id,
+      documentIds: taiLieuHopLe,
+      chapterId: chuong.id,
+      chapterName: chuong.name,
+      projectName: project.name,
+      voiceId: giongDaChon?.id,
+      voiceName: giongDaChon?.name,
+      avatarImageUrl: avatarDaChon?.fileUrl,
+      template,
+      aspectRatio: tyLe,
+      resolution: doPhanGiai,
+      fps,
+      subtitles: hienPhuDe,
+      backgroundMusic: dungNhacNen,
+    });
+
+    if (loiWebhook) {
+      // Make co the tra loi muon/timeout du van dang chay -> chi coi la that bai
+      // neu Make chua he cap nhat tien trinh (job van o buoc dau sau khi gui).
+      const { data: jobHienTai } = await layVideoJob(jobMoi.id);
+      if (!jobHienTai || (jobHienTai.stage === 'script' && jobHienTai.status === 'running')) {
+        await baoLoiRender(jobMoi.id, loiWebhook.message);
+      }
+    }
+  };
+
+  const taiPptx = async () => {
+    if (!job?.pptxPath) return;
+    setDangTaiPptx(true);
+    const { data } = await layUrlPptx(job.pptxPath);
+    setDangTaiPptx(false);
+    if (data?.url) window.open(data.url, '_blank', 'noopener');
   };
 
   return (
@@ -262,67 +369,98 @@ function TrangTaoVideoAI({
               <div className="skeleton skeleton-text" style={{ width: '55%' }} aria-hidden="true" />
               <div className="skeleton skeleton-text" style={{ width: '60%' }} aria-hidden="true" />
             </div>
-          ) : !duDieuKienCoBan ? (
-            <div className="video-gen-warning">
-              <p><CircleAlert size={15} /> {t('videoGeneratorPage.content.notEnough')}</p>
-              <ul>
-                <li className={coTaiLieu ? 'ok' : ''}>{coTaiLieu ? <Check size={12} /> : <span className="video-gen-dot" />} {t('videoGeneratorPage.content.missingDocuments')}</li>
-                <li className={coAvatar ? 'ok' : ''}>{coAvatar ? <Check size={12} /> : <span className="video-gen-dot" />} {t('videoGeneratorPage.content.missingAvatar')}</li>
-              </ul>
-              <button type="button" onClick={onBack}>{t('videoGeneratorPage.content.backToChapter')}</button>
-            </div>
           ) : (
             <>
+              {!duDieuKienCoBan && (
+                <div className="video-gen-warning">
+                  <p><CircleAlert size={15} /> {t('videoGeneratorPage.content.notEnough')}</p>
+                  <ul>
+                    <li className={coTaiLieu ? 'ok' : ''}>{coTaiLieu ? <Check size={12} /> : <span className="video-gen-dot" />} {t('videoGeneratorPage.content.missingDocuments')}</li>
+                    <li className={coAvatar ? 'ok' : ''}>{coAvatar ? <Check size={12} /> : <span className="video-gen-dot" />} {t('videoGeneratorPage.content.missingAvatar')}</li>
+                  </ul>
+                </div>
+              )}
+
               <div className="video-gen-check-row">
                 <span className="video-gen-check-icon"><FileText size={16} /></span>
-                <div>
-                  <strong>{t('chapterDetailPage.steps.documents')}</strong>
-                  <p>{danhSachTaiLieu.slice(0, 1).map((tl) => (
-                    <span key={tl.id}><Check size={12} /> {tl.name}</span>
-                  ))}{danhSachTaiLieu.length > 1 && ` +${danhSachTaiLieu.length - 1}`}</p>
+                <div className="video-gen-select-block">
+                  <div className="video-gen-select-head">
+                    <strong>{t('chapterDetailPage.steps.documents')}</strong>
+                    <button type="button" className="video-gen-script-generate" disabled={dangUploadTaiLieu} onClick={() => inputTaiLieuRef.current?.click()}>
+                      {dangUploadTaiLieu ? <Loader2 size={12} className="video-gen-spin" /> : <UploadCloud size={12} />}
+                      {t('videoGeneratorPage.content.uploadDocument')}
+                    </button>
+                  </div>
+                  {danhSachTaiLieu.length > 0 ? (
+                    <ul className="video-gen-document-list">
+                      {danhSachTaiLieu.map((tl) => (
+                        <li key={tl.id}>
+                          <label className={taiLieuDaChon.includes(tl.id) ? 'selected' : ''}>
+                            <input
+                              type="checkbox"
+                              checked={taiLieuDaChon.includes(tl.id)}
+                              onChange={() => chonTaiLieu(tl.id)}
+                            />
+                            <span>{tl.name}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="video-gen-script-empty">{t('videoGeneratorPage.content.missingDocuments')}</p>
+                  )}
+                  <input
+                    ref={inputTaiLieuRef}
+                    type="file"
+                    multiple
+                    hidden
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,application/pdf,application/msword,text/plain,text/markdown"
+                    onChange={xuLyUploadTaiLieuContent}
+                  />
                 </div>
               </div>
 
               <div className="video-gen-check-row">
                 <span className="video-gen-check-icon">
-                  {avatarDaChon?.fileUrl ? <img src={avatarDaChon.fileUrl} alt={avatarDaChon.name} /> : <UserRound size={16} />}
-                </span>
-                <div>
-                  <strong>{t('chapterDetailPage.steps.avatar')}</strong>
-                  <p><Check size={12} /> {avatarDaChon?.name}</p>
-                </div>
-              </div>
-
-              <div className="video-gen-check-row">
-                <span className="video-gen-check-icon"><Bot size={16} /></span>
-                <div className="video-gen-script-block">
-                  <strong>{t('chapterDetailPage.steps.script')}</strong>
-                  {loiKichBan && <p className="video-gen-script-error"><CircleAlert size={12} /> {loiKichBan}</p>}
-                  {dangTaiKichBan ? (
-                    <p className="video-gen-script-loading"><Loader2 size={12} className="video-gen-spin" /></p>
-                  ) : coKichBan ? (
-                    <>
-                      <p><Check size={12} /> {t('videoGeneratorPage.content.hasScript')}</p>
-                      <small>{t('videoGeneratorPage.content.estimatedDuration', { duration: dinhDangThoiLuong(thoiLuongDuKien) })}</small>
-                      <button type="button" className="video-gen-script-generate" disabled={dangTaoBangAI} onClick={taoTuAI}>
-                        {dangTaoBangAI ? <Loader2 size={12} className="video-gen-spin" /> : <Bot size={12} />}
-                        {t('chapterDetailPage.steps.generateWithAI')}
-                      </button>
-                    </>
+                  {avatarDaChon?.fileUrl && !anhAvatarLoi ? (
+                    <img src={avatarDaChon.fileUrl} alt={avatarDaChon.name} onError={() => setAnhAvatarLoi(true)} />
                   ) : (
-                    <>
-                      <p className="video-gen-script-empty">{t('videoGeneratorPage.content.missingScript')}</p>
-                      <button type="button" className="video-gen-script-generate" disabled={dangTaoBangAI} onClick={taoTuAI}>
-                        {dangTaoBangAI ? <Loader2 size={12} className="video-gen-spin" /> : <Bot size={12} />}
-                        {t('chapterDetailPage.steps.generateWithAI')}
-                      </button>
-                    </>
+                    <UserRound size={16} />
                   )}
+                </span>
+                <div className="video-gen-select-block">
+                  <div className="video-gen-select-head">
+                    <strong>{t('chapterDetailPage.steps.avatar')}</strong>
+                    <button type="button" className="video-gen-script-generate" disabled={dangUploadAvatar} onClick={() => inputAvatarRef.current?.click()}>
+                      {dangUploadAvatar ? <Loader2 size={12} className="video-gen-spin" /> : <UploadCloud size={12} />}
+                      {t('videoGeneratorPage.content.uploadAvatar')}
+                    </button>
+                  </div>
+                  <select value={chuong.selectedAvatarId || ''} disabled={dangChonAvatar} onChange={doiAvatarContent}>
+                    <option value="">{t('videoGeneratorPage.content.avatarNone')}</option>
+                    {avatars.map((avatar) => (
+                      <option value={avatar.id} key={avatar.id}>{avatar.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    ref={inputAvatarRef}
+                    type="file"
+                    multiple
+                    hidden
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={xuLyUploadAvatarContent}
+                  />
                 </div>
               </div>
 
               <div className="video-gen-actions">
-                <button type="button" className="primary" disabled={!coKichBan} title={!coKichBan ? t('videoGeneratorPage.content.missingScript') : undefined} onClick={() => luuVaTiepTuc('voice')}>
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={!duDieuKienCoBan}
+                  title={!duDieuKienCoBan ? t('videoGeneratorPage.content.notEnough') : undefined}
+                  onClick={() => setBuoc('voice')}
+                >
                   {t('videoGeneratorPage.continue')}
                 </button>
               </div>
@@ -382,7 +520,7 @@ function TrangTaoVideoAI({
             <button
               type="button"
               className="video-gen-generate-button"
-              disabled={!giongId || !coKichBan || dangTaoAudio}
+              disabled={!giongId || dangTaoAudio}
               onClick={ngheThu}
             >
               {dangTaoAudio ? <Loader2 size={14} className="video-gen-spin" /> : <Volume2 size={14} />}
@@ -391,26 +529,6 @@ function TrangTaoVideoAI({
           </div>
 
           {audioUrl && <TrinhPhatAudio url={audioUrl} />}
-
-          {loiXacNhanGiong && <p className="video-gen-script-error"><CircleAlert size={13} /> {loiXacNhanGiong}</p>}
-
-          <div className="video-gen-generate-row">
-            {dangTaiAmThanhDaXacNhan ? (
-              <Loader2 size={14} className="video-gen-spin" />
-            ) : giongDaXacNhanKhopHienTai ? (
-              <p className="video-gen-voice-confirmed"><Check size={13} /> {t('videoGeneratorPage.voice.confirmed', { name: amThanhDaXacNhan.voiceName })}</p>
-            ) : (
-              <button
-                type="button"
-                className="video-gen-confirm-button"
-                disabled={!giongId || !coKichBan || dangXacNhanGiong}
-                onClick={xacNhan}
-              >
-                {dangXacNhanGiong ? <Loader2 size={14} className="video-gen-spin" /> : <Check size={14} />}
-                {t('videoGeneratorPage.voice.confirm')}
-              </button>
-            )}
-          </div>
 
           <label className="video-gen-checkbox">
             <input type="checkbox" checked={dongBoKhauHinh} onChange={(event) => setDongBoKhauHinh(event.target.checked)} />
@@ -422,8 +540,7 @@ function TrangTaoVideoAI({
             <button
               type="button"
               className="primary"
-              disabled={!giongDaXacNhanKhopHienTai}
-              title={!giongDaXacNhanKhopHienTai ? t('videoGeneratorPage.voice.confirmRequired') : undefined}
+              disabled={!giongId}
               onClick={() => luuVaTiepTuc('config')}
             >
               {t('videoGeneratorPage.continue')}
@@ -501,11 +618,11 @@ function TrangTaoVideoAI({
           <dl className="video-gen-summary">
             <div><dt>{t('videoGeneratorPage.confirm.project')}</dt><dd>{project.name}</dd></div>
             <div><dt>{t('videoGeneratorPage.confirm.chapter')}</dt><dd>{chuong.name}</dd></div>
-            <div><dt>{t('chapterDetailPage.steps.documents')}</dt><dd>{t('videoGeneratorPage.confirm.fileCount', { count: danhSachTaiLieu.length })}</dd></div>
+            <div><dt>{t('chapterDetailPage.steps.documents')}</dt><dd>{t('videoGeneratorPage.confirm.fileCount', { count: taiLieuHopLe.length })}</dd></div>
             <div><dt>{t('chapterDetailPage.steps.avatar')}</dt><dd>{avatarDaChon?.name}</dd></div>
             <div><dt>{t('videoGeneratorPage.confirm.voice')}</dt><dd>{giongDaChon?.name || giongId}</dd></div>
             <div><dt>{t('videoGeneratorPage.confirm.video')}</dt><dd>{doPhanGiai} • {tyLe} • {fps} FPS</dd></div>
-            <div><dt>{t('videoGeneratorPage.confirm.estimatedDuration')}</dt><dd>{dinhDangThoiLuong(thoiLuongDuKien)}</dd></div>
+            <div><dt>{t('videoGeneratorPage.confirm.estimatedDuration')}</dt><dd>{thoiLuongDuKien ? dinhDangThoiLuong(thoiLuongDuKien) : '—'}</dd></div>
           </dl>
 
           <div className="video-gen-actions">
@@ -525,18 +642,53 @@ function TrangTaoVideoAI({
           <div className="video-gen-progress-track">
             <span style={{ width: `${phanTramRender}%` }} />
           </div>
-          <p className="video-gen-progress-percent">{Math.round(phanTramRender)}%</p>
-          <p className="video-gen-progress-current"><Loader2 size={13} className="video-gen-spin" /> {t(CAC_BUOC_RENDER[buocRenderHienTai])}</p>
+          <p className="video-gen-progress-percent">{phanTramRender}%</p>
+          {thongDiepLoiRender ? (
+            <p className="video-gen-script-error"><CircleAlert size={15} /> {thongDiepLoiRender}</p>
+          ) : (
+            <p className="video-gen-progress-current">
+              <Loader2 size={13} className="video-gen-spin" /> {t(CAC_BUOC_RENDER[Math.min(chiSoBuocRender, CAC_BUOC_RENDER.length - 1)].labelKey)}
+            </p>
+          )}
 
           <ul className="video-gen-progress-steps">
-            {CAC_BUOC_RENDER.map((buocKey, chiSo) => (
-              <li key={buocKey} className={chiSo < buocRenderHienTai ? 'done' : chiSo === buocRenderHienTai ? 'active' : ''}>
-                {chiSo < buocRenderHienTai ? <Check size={13} /> : chiSo === buocRenderHienTai ? <Loader2 size={13} className="video-gen-spin" /> : <span className="video-gen-dot" />}
-                {t(buocKey)}
-              </li>
-            ))}
+            {CAC_BUOC_RENDER.map(({ stage, labelKey }, chiSo) => {
+              const daXong = chiSo < chiSoBuocRender;
+              const dangChay = chiSo === chiSoBuocRender;
+              return (
+                <li key={stage} className={daXong ? 'done' : dangChay ? 'active' : ''}>
+                  {daXong
+                    ? <Check size={13} />
+                    : dangChay
+                      ? (thongDiepLoiRender ? <CircleAlert size={13} /> : <Loader2 size={13} className="video-gen-spin" />)
+                      : <span className="video-gen-dot" />}
+                  {t(labelKey)}
+                </li>
+              );
+            })}
           </ul>
-          <p className="video-gen-simulated-note">{t('videoGeneratorPage.progress.simulatedNote')}</p>
+
+          {ketQuaKichBan && (
+            <div className="video-gen-script-ready">
+              <p><CheckCircle2 size={15} /> {t('videoGeneratorPage.progress.scriptReady', { words: ketQuaKichBan.wordCount, slides: ketQuaKichBan.slides.length })}</p>
+              <details>
+                <summary>{t('videoGeneratorPage.progress.viewContent')}</summary>
+                {ketQuaKichBan.slides.length > 0 && (
+                  <ol>
+                    {ketQuaKichBan.slides.map((slide, chiSo) => <li key={chiSo}>{slide.title}</li>)}
+                  </ol>
+                )}
+                <pre>{ketQuaKichBan.content}</pre>
+              </details>
+            </div>
+          )}
+
+          {thongDiepLoiRender && (
+            <div className="video-gen-actions">
+              <button type="button" className="ghost" onClick={() => setBuoc('confirm')}>{t('videoGeneratorPage.back2')}</button>
+              <button type="button" className="primary" onClick={batDauRender}>{t('videoGeneratorPage.generatingScript.retry')}</button>
+            </div>
+          )}
         </section>
       )}
 
@@ -545,19 +697,25 @@ function TrangTaoVideoAI({
           <h2 className="video-gen-result-title"><CheckCircle2 size={18} /> {t('videoGeneratorPage.result.title')}</h2>
 
           <div className="video-gen-result-preview">
-            <span><Play size={28} fill="currentColor" /></span>
+            {job?.videoUrl ? (
+              <video src={job.videoUrl} controls />
+            ) : (
+              <span><Play size={28} fill="currentColor" /></span>
+            )}
           </div>
 
           <p className="video-gen-result-chapter">{chuong.name}</p>
-          <p className="video-gen-result-meta">{dinhDangThoiLuong(thoiLuongDuKien)} • {doPhanGiai} • {tyLe}</p>
-          <p className="video-gen-simulated-note">{t('videoGeneratorPage.result.simulatedNote')}</p>
+          <p className="video-gen-result-meta">{thoiLuongDuKien ? `${dinhDangThoiLuong(thoiLuongDuKien)} • ` : ''}{doPhanGiai} • {tyLe}</p>
 
           <div className="video-gen-result-actions">
-            <button type="button" disabled title={t('videoGeneratorPage.result.notAvailable')}>
+            <button type="button" disabled={!job?.videoUrl} onClick={() => window.open(job.videoUrl, '_blank', 'noopener')}>
               <VideoIcon size={15} /> {t('videoPage.menu.play')}
             </button>
-            <button type="button" disabled title={t('videoGeneratorPage.result.notAvailable')}>
+            <button type="button" disabled={!job?.videoUrl} onClick={() => window.open(job.videoUrl, '_blank', 'noopener')}>
               <Download size={15} /> {t('videoPage.menu.download')}
+            </button>
+            <button type="button" disabled={!job?.pptxPath || dangTaiPptx} onClick={taiPptx}>
+              {dangTaiPptx ? <Loader2 size={15} className="video-gen-spin" /> : <FileText size={15} />} {t('videoGeneratorPage.result.downloadPptx')}
             </button>
             <button type="button" className="primary" onClick={onBack}>{t('videoGeneratorPage.content.backToChapter')}</button>
           </div>

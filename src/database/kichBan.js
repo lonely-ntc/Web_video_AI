@@ -120,9 +120,9 @@ async function xoaKichBan(userId, scriptId) {
   return { error: error || null };
 }
 
-async function taoKichBanBangAI(chapterId) {
+async function taoKichBanBangAI(chapterId, documentIds = []) {
   const { data, error } = await supabase.functions.invoke('generate-script', {
-    body: { chapterId },
+    body: { chapterId, documentIds },
   });
 
   // supabase-js tra loi qua truong error khi Edge Function tra ve status
